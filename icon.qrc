@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>icon/honeybee.jpg</file>
+        <file>icon/save.png</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,757 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1344</width>
+    <height>765</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>NTU BIME Honeybee Observation System</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>10</y>
+      <width>251</width>
+      <height>561</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Record</string>
+     </attribute>
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>221</width>
+        <height>431</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Enviroment Info</string>
+      </property>
+      <widget class="QLabel" name="label_9">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>180</y>
+         <width>99</width>
+         <height>33</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>In Hive</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_10">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>320</y>
+         <width>99</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Out Hive</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_11">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>220</y>
+         <width>101</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Temperture</string>
+       </property>
+      </widget>
+      <widget class="QLCDNumber" name="inhive_t_lcdNumber">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>250</y>
+         <width>91</width>
+         <height>51</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLCDNumber" name="outhive_t_lcdNumber">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>380</y>
+         <width>91</width>
+         <height>51</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLCDNumber" name="outhive_rh_lcdNumber">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>380</y>
+         <width>91</width>
+         <height>51</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLCDNumber" name="inhive_rh_lcdNumber">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>250</y>
+         <width>91</width>
+         <height>51</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_12">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>219</y>
+         <width>81</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Humidity</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_13">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>351</y>
+         <width>101</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Temperture</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_14">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>350</y>
+         <width>81</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Humidity</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="port_name_comboBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>191</width>
+         <height>51</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLCDNumber" name="pressure_lcdNumber">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>130</y>
+         <width>181</width>
+         <height>51</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_15">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>90</y>
+         <width>161</width>
+         <height>33</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Air Pressure (hPa)</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Main</string>
+     </attribute>
+     <widget class="QPushButton" name="stitching_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>101</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Stitch</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>110</y>
+        <width>141</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>File Sequence</string>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="videoName_textBrowser">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>151</y>
+        <width>221</width>
+        <height>311</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+     </widget>
+     <widget class="QLCDNumber" name="processing_lcdNumber">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>9</y>
+        <width>101</width>
+        <height>51</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="show_image_checkBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>131</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Image</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QProgressBar" name="processing_progressBar">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>480</y>
+        <width>221</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="erase_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>80</y>
+        <width>75</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Erase</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Setting</string>
+     </attribute>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>211</width>
+        <height>251</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Hough Circle</string>
+      </property>
+      <widget class="QSpinBox" name="maxRadius_hough_circle_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>130</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="value">
+        <number>9</number>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="dp_hough_circle_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>60</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="para_2_hough_circle_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>200</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>200</number>
+       </property>
+       <property name="value">
+        <number>15</number>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="minRadius_hough_circle_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>60</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="value">
+        <number>6</number>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="para_1_hough_circle_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>200</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>200</number>
+       </property>
+       <property name="value">
+        <number>150</number>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="minDist_hough_circle_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>130</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="value">
+        <number>20</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>41</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>dp</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_3">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>170</y>
+         <width>31</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>P1</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_4">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>170</y>
+         <width>31</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>P2</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>81</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>minDist</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_6">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>30</y>
+         <width>101</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>minRadius</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>100</y>
+         <width>101</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>maxRadius</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>280</y>
+        <width>211</width>
+        <height>101</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Tag Recogntion</string>
+      </property>
+      <widget class="QSpinBox" name="binarythreshold_spinBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>60</y>
+         <width>61</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>255</number>
+       </property>
+       <property name="value">
+        <number>110</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_8">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>121</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Binary Threhold</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Tag</string>
+     </attribute>
+     <widget class="QPushButton" name="load_training_data_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>181</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Train</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="test_recognition_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>181</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Test</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="PCARemains_spinBox">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>270</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>256</number>
+      </property>
+      <property name="value">
+       <number>25</number>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="stitchingStart_pushButton">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>610</y>
+      <width>111</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Start</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="stitchingStop_pushButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1210</x>
+      <y>610</y>
+      <width>111</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Stop</string>
+    </property>
+   </widget>
+   <widget class="QSmartGraphicsView" name="imageShow_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>1061</width>
+      <height>561</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QTextBrowser" name="system_log_textBrowser">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>590</y>
+      <width>1061</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1344</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad_Stitching_Image"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_Raw_Video_File"/>
+   </widget>
+   <widget class="QMenu" name="menuSet">
+    <property name="title">
+     <string>Setting</string>
+    </property>
+    <addaction name="actionChange_SVM_Model"/>
+    <addaction name="actionChange_PCA_Model"/>
+    <addaction name="actionChange_Stitching_Model"/>
+    <addaction name="separator"/>
+    <addaction name="actionWith_PCA"/>
+    <addaction name="actionWith_HOG"/>
+   </widget>
+   <widget class="QMenu" name="menuModel">
+    <property name="title">
+     <string>Model</string>
+    </property>
+    <addaction name="actionTrain_New_Tag_Model"/>
+   </widget>
+   <widget class="QMenu" name="menuAnalysis">
+    <property name="title">
+     <string>Analysis</string>
+    </property>
+    <addaction name="actionStart_Analysis_Data"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuSet"/>
+   <addaction name="menuModel"/>
+   <addaction name="menuAnalysis"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionLoad_Raw_Video_File">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load Raw Video File</string>
+   </property>
+  </action>
+  <action name="actionLoad_Stitching_Image">
+   <property name="text">
+    <string>Load Stitching Image</string>
+   </property>
+  </action>
+  <action name="actionChange_SVM_Model">
+   <property name="text">
+    <string>Change SVM Model</string>
+   </property>
+  </action>
+  <action name="actionChange_PCA_Model">
+   <property name="text">
+    <string>Change PCA Model</string>
+   </property>
+  </action>
+  <action name="actionChange_Stitching_Model">
+   <property name="text">
+    <string>Change Stitching Model</string>
+   </property>
+  </action>
+  <action name="actionWith_PCA">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>With PCA</string>
+   </property>
+  </action>
+  <action name="actionWith_HOG">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>With HOG</string>
+   </property>
+  </action>
+  <action name="actionTrain_New_Tag_Model">
+   <property name="text">
+    <string>Train New Tag Model</string>
+   </property>
+  </action>
+  <action name="actionStart_Analysis_Data">
+   <property name="text">
+    <string>Start Analysis Data</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QSmartGraphicsView</class>
+   <extends>QWidget</extends>
+   <header>qsmartgraphicsview/qsmartgraphicsview.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

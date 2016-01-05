@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DataProcessWindow</class>
+ <widget class="QMainWindow" name="DataProcessWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1007</width>
+    <height>776</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Data Process</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTextBrowser" name="system_log_textBrowser">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>620</y>
+      <width>761</width>
+      <height>111</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>630</y>
+      <width>191</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>60</y>
+      <width>221</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Step 2.</string>
+    </property>
+    <widget class="QPushButton" name="data_preprocessing_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>181</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Preprocessing</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>10</y>
+      <width>211</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Step 1. Open Raw Data</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>180</y>
+      <width>271</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Step 3. Open Processed Data</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>230</y>
+      <width>221</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Step 4.</string>
+    </property>
+    <widget class="QPushButton" name="trajectory_classify_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>181</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Trajectory Classify</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>20</y>
+      <width>691</width>
+      <height>591</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="bee_info">
+     <attribute name="title">
+      <string>Bee Info</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="weather_info">
+     <attribute name="title">
+      <string>Weather Info</string>
+     </attribute>
+     <widget class="QCustomPlot" name="temp_info_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>661</width>
+        <height>171</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCustomPlot" name="rh_info_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>661</width>
+        <height>171</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCustomPlot" name="pressure_info_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>370</y>
+        <width>661</width>
+        <height>171</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1007</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen_Raw_Data"/>
+    <addaction name="actionOpen_Processed_Data"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen_Sensor_Data"/>
+   </widget>
+   <widget class="QMenu" name="menuSetting">
+    <property name="title">
+     <string>Setting</string>
+    </property>
+    <addaction name="actionObject_Tracking"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuSetting"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen_Raw_Data">
+   <property name="text">
+    <string>Open Raw Data</string>
+   </property>
+  </action>
+  <action name="actionOpen_Processed_Data">
+   <property name="text">
+    <string>Open Processed Data</string>
+   </property>
+  </action>
+  <action name="actionObject_Tracking">
+   <property name="text">
+    <string>Object Tracking</string>
+   </property>
+  </action>
+  <action name="actionOpen_Sensor_Data">
+   <property name="text">
+    <string>Open Sensor Data</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot/qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
