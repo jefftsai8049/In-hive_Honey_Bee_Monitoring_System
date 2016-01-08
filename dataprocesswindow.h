@@ -92,6 +92,8 @@ private:
 
     void getPressure(const QVector<weatherInfo> &weatherData,QVector<double> &x,QVector<double> &y);
 
+    void plotBeeInfo(const QVector<trackPro> &data);
+
 
 signals:
     void sendSystemLog(const QString &log);

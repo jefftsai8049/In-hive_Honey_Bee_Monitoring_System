@@ -60,14 +60,14 @@ MainWindow::MainWindow(QWidget *parent) :
         emit sendSystemLog(manulStitchModel.fileName()+" no found!");
 
     //load SVM tag recognition model
-    QFile SVMModel("model/model_HOG_PCA_25_-1_0.984706.yaml");
+    QFile SVMModel("model/model_HOG_PCA_25_-2_0.984706.yaml");
     if(SVMModel.exists())
         TT->setSVMModelFileName(SVMModel.fileName().toStdString());
     else
         emit sendSystemLog(SVMModel.fileName()+" no found!");
 
     //load PCA model for tag image reduce dimensions
-    QFile PCAModel("model/PCA_PCA_25_.txt");
+    QFile PCAModel("model/PCA_HOG_PCA_25_.txt");
     if(PCAModel.exists())
         TT->setPCAModelFileName(PCAModel.fileName().toStdString());
     else
@@ -410,6 +410,7 @@ void mouseCallBack(int event, int x, int y, int flag,void* userdata)
 
 void MainWindow::on_stitchingStart_pushButton_clicked()
 {
+    static int pressCount = 0;
     //start processing video
     ui->videoName_textBrowser->clear();
     for (int k = 0;k<videoList[0].size();k++)
@@ -422,8 +423,10 @@ void MainWindow::on_stitchingStart_pushButton_clicked()
     stitchImage();
 
     //send finish signal to mainwindow
-    connect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
+    if(pressCount == 0)
+        connect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
 
+    pressCount++;
     ui->stitchingStart_pushButton->setEnabled(false);
     ui->stitchingStop_pushButton->setEnabled(true);
 }
@@ -433,8 +436,8 @@ void MainWindow::on_stitchingStop_pushButton_clicked()
     //stop processing video
     TT->stopStitch();
 
-    //send finish signal to mainwindow
-    disconnect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
+    //    //send finish signal to mainwindow
+    //    disconnect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
 
     ui->stitchingStart_pushButton->setEnabled(true);
     ui->stitchingStop_pushButton->setEnabled(false);
@@ -730,4 +733,26 @@ void MainWindow::on_actionWith_HOG_triggered()
 {
     //set inital PCA and HOG parameters
     TT->setPCAandHOG(ui->actionWith_PCA->isChecked(),ui->actionWith_HOG->isChecked());
+}
+
+void MainWindow::on_erase__ten_pushButton_clicked()
+{
+    //erase file from wating processing list
+    for(int i = 0;i<videoList.size();i++)
+    {
+        if(videoList[i].size() > 10)
+        {
+            for(int j = 0; j < 10;j++)
+            {
+                videoList[i].erase(videoList[i].begin());
+            }
+        }
+    }
+    ui->videoName_textBrowser->clear();
+    for (int k = 0;k<videoList[0].size();k++)
+    {
+        QString fileName = videoList[0][k]+"\n";
+        fileName = fileName.mid(2,fileName.length()-2);
+        ui->videoName_textBrowser->insertPlainText(fileName);
+    }
 }

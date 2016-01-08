@@ -8,6 +8,7 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     ui->setupUi(this);
     OT = new object_tracking;
     OTS = new ObjectTrackingForm;
+
     connect(this,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
 
     connect(OT,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
@@ -15,6 +16,7 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     connect(OT,SIGNAL(sendProgress(int)),this,SLOT(receiveProgress(int)));
 
     connect(OTS,SIGNAL(setObjectTrackingParameters(objectTrackingParameters)),this,SLOT(setObjectTrackingParameters(objectTrackingParameters)));
+
     OTS->requestObjectTrackingParameters();
     OT->setPathSegmentSize(this->OTParams.segmentSize);
 }
@@ -27,9 +29,14 @@ DataProcessWindow::~DataProcessWindow()
 
 void DataProcessWindow::on_data_preprocessing_pushButton_clicked()
 {
+    //process raw data
     QFuture<void> rawDataProcessing = QtConcurrent::run(OT,&object_tracking::rawDataPreprocessing,&this->path,&this->data);
     rawDataProcessing.waitForFinished();
     this->path.clear();
+
+    //set next button enable
+    ui->trajectory_classify_pushButton->setEnabled(true);
+
 
 }
 
@@ -78,6 +85,9 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 
     ui->trajectory_classify_pushButton->setEnabled(true);
 
+
+    //plot chart
+    this->plotBeeInfo(this->data);
 }
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
@@ -108,19 +118,29 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     QFont font;
     font.setPointSize(14);
 
-    //
+    //insert title and set font
     ui->rh_info_widget->plotLayout()->insertRow(0);
     QCPPlotTitle *rhTitle = new QCPPlotTitle(ui->rh_info_widget, "Humidity In-Out Bee Hive");
     rhTitle->setFont(font);
     ui->rh_info_widget->plotLayout()->addElement(0, 0, rhTitle);
 
+    ui->temp_info_widget->plotLayout()->insertRow(0);
+    QCPPlotTitle *tempTitle = new QCPPlotTitle(ui->temp_info_widget, "Temperture In-Out Bee Hive");
+    tempTitle->setFont(font);
+    ui->temp_info_widget->plotLayout()->addElement(0, 0, tempTitle);
+
+    ui->pressure_info_widget->plotLayout()->insertRow(0);
+    QCPPlotTitle *pressureTitle = new QCPPlotTitle(ui->pressure_info_widget, "Air Pressure");
+    pressureTitle->setFont(font);
+    ui->pressure_info_widget->plotLayout()->addElement(0, 0, pressureTitle);
+
+    //add humidity graph
     QVector<double> x1,y1;
     this->getInHiveRH(weatherData,x1,y1);
     ui->rh_info_widget->addGraph();
     ui->rh_info_widget->graph(0)->setData(x1,y1);
     ui->rh_info_widget->graph(0)->setPen(QPen(Qt::red,2));
     ui->rh_info_widget->graph(0)->setName("In-Hive");
-
 
     QVector<double> x2,y2;
     this->getOutHiveRH(weatherData,x2,y2);
@@ -129,23 +149,7 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->rh_info_widget->graph(1)->setPen(QPen(Qt::blue,2));
     ui->rh_info_widget->graph(1)->setName("Out-Hive");
 
-    ui->rh_info_widget->xAxis->rescale();
-    ui->rh_info_widget->yAxis->rescale();
-    ui->rh_info_widget->yAxis->setVisible(true);
-    ui->rh_info_widget->yAxis->setLabel("Humidity (%)");
-
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setAutoTickStep(false);
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*6); // 4 day tickstep
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelType(QCPAxis::ltDateTime);
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::LocalTime);
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelRotation(30);
-
-    ui->temp_info_widget->plotLayout()->insertRow(0);
-    QCPPlotTitle *tempTitle = new QCPPlotTitle(ui->temp_info_widget, "Temperture In-Out Bee Hive");
-    tempTitle->setFont(font);
-    ui->temp_info_widget->plotLayout()->addElement(0, 0, tempTitle);
-
+    //add temperture graph
     QVector<double> x3,y3;
     this->getInHiveTemp(weatherData,x3,y3);
     ui->temp_info_widget->addGraph(ui->temp_info_widget->xAxis,ui->temp_info_widget->yAxis);
@@ -160,6 +164,28 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->temp_info_widget->graph(1)->setPen(QPen(QColor(Qt::blue),2));
     ui->temp_info_widget->graph(1)->setName("Out-Hive");
 
+    //add pressure graph
+    QVector<double> x5,y5;
+    this->getPressure(weatherData,x5,y5);
+    ui->pressure_info_widget->addGraph(ui->pressure_info_widget->xAxis,ui->pressure_info_widget->yAxis);
+    ui->pressure_info_widget->graph(0)->setData(x5,y5);
+    ui->pressure_info_widget->graph(0)->setPen(QPen(QColor(Qt::black),2));
+    ui->pressure_info_widget->graph(0)->setName("Air Pressure");
+
+
+    //set scale and label
+    ui->rh_info_widget->xAxis->rescale();
+    ui->rh_info_widget->yAxis->rescale();
+    ui->rh_info_widget->yAxis->setVisible(true);
+    ui->rh_info_widget->yAxis->setLabel("Humidity (%)");
+
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setAutoTickStep(false);
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*6); // 4 day tickstep
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelType(QCPAxis::ltDateTime);
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::LocalTime);
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelRotation(30);
+
     ui->temp_info_widget->xAxis->rescale();
     ui->temp_info_widget->yAxis->rescale();
     ui->temp_info_widget->yAxis->setVisible(true);
@@ -171,19 +197,6 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::LocalTime);
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelRotation(30);
-
-
-    ui->pressure_info_widget->plotLayout()->insertRow(0);
-    QCPPlotTitle *pressureTitle = new QCPPlotTitle(ui->pressure_info_widget, "Air Pressure");
-    pressureTitle->setFont(font);
-    ui->pressure_info_widget->plotLayout()->addElement(0, 0, pressureTitle);
-
-    QVector<double> x5,y5;
-    this->getPressure(weatherData,x5,y5);
-    ui->pressure_info_widget->addGraph(ui->pressure_info_widget->xAxis,ui->pressure_info_widget->yAxis);
-    ui->pressure_info_widget->graph(0)->setData(x5,y5);
-    ui->pressure_info_widget->graph(0)->setPen(QPen(QColor(Qt::black),2));
-    ui->pressure_info_widget->graph(0)->setName("Air Pressure");
 
     ui->pressure_info_widget->xAxis->rescale();
     ui->pressure_info_widget->yAxis->rescale();
@@ -197,6 +210,7 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelRotation(30);
 
+    //replot
     ui->pressure_info_widget->legend->setVisible(true);
     ui->pressure_info_widget->replot();
 
@@ -206,7 +220,18 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->rh_info_widget->legend->setVisible(true);
     ui->rh_info_widget->replot();
 
+    //save chart
+    QDir outChart("out/chart");
+    if(!outChart.exists())
+    {
+        outChart.cdUp();
+        outChart.mkdir("chart");
+        outChart.cd("chart");
 
+    }
+    ui->pressure_info_widget->savePng(outChart.absolutePath()+"/"+"pressure_info.png");
+    ui->rh_info_widget->savePng(outChart.absolutePath()+"/"+"humidity_info.png");
+    ui->temp_info_widget->savePng(outChart.absolutePath()+"/"+"temperture_info.png");
 }
 
 void DataProcessWindow::loadWeatherData(const QStringList &fileNames, QVector<weatherInfo> &weatherData)
@@ -317,4 +342,20 @@ void DataProcessWindow::getPressure(const QVector<weatherInfo> &weatherData, QVe
         x[i] = weatherData.at(i).time.toTime_t();
         y[i] = weatherData.at(i).pressure;
     }
+}
+
+void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
+{
+    //set title font size
+    QFont font;
+    font.setPointSize(14);
+
+    //insert title and set font
+    ui->bee_info_widget->plotLayout()->insertRow(0);
+    QCPPlotTitle *beeTitle = new QCPPlotTitle(ui->bee_info_widget, "Daily effectively track");
+    beeTitle->setFont(font);
+    ui->bee_info_widget->plotLayout()->addElement(0, 0, beeTitle);
+
+
+    ui->bee_info_widget->replot();
 }

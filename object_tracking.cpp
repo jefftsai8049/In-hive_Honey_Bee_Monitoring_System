@@ -590,7 +590,7 @@ void object_tracking::rawDataPreprocessing(const std::vector<track> *path, QVect
     }
 
     //check dir is exist or not
-    QDir dir("processed_data");
+    QDir dir("out/processed_data");
     if(!dir.exists())
     {
         dir.cdUp();

@@ -123,6 +123,8 @@ private slots:
 
     void on_actionWith_PCA_triggered();
 
+    void on_erase__ten_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 

@@ -143,12 +143,22 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="bee_info">
      <attribute name="title">
       <string>Bee Info</string>
      </attribute>
+     <widget class="QCustomPlot" name="bee_info_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>661</width>
+        <height>521</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="weather_info">
      <attribute name="title">
