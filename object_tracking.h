@@ -112,6 +112,8 @@ public:
 
     //for tracjectory classify
 
+    void tracjectoryWhiteList(QVector<trackPro> &data,const QStringList &whiteList);
+
     void tracjectoryClassify(QVector<trackPro> &path,const objectTrackingParameters params);
 
     QString tracjectoryName(const char &pattern);

@@ -104,6 +104,13 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
+    qDebug() << this->data.size();
+    OT->tracjectoryWhiteList(this->data,this->whiteList);
+qDebug() << this->data.size();
+//    for(int i = 0; i < this->data.size();i++)
+//    {
+//        qDebug() << this->data.at(i).ID;
+//    }
     OT->tracjectoryClassify(this->data,this->OTParams);
 }
 

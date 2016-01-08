@@ -650,7 +650,20 @@ void object_tracking::tracjectoryWhiteList(QVector<trackPro> &data, const QStrin
     {
         for(int j = 0; j < whiteList.size(); j++)
         {
-            if(data.at(i).ID.at(0))
+            //qDebug() << data.at(i).ID.at(0) << whiteList.at(j).at(0);
+            if(data.at(i).ID.at(0) == whiteList.at(j).at(0))
+            {
+                break;
+            }
+            else
+            {
+                if(j == whiteList.size()-1)
+                {
+                    data.remove(i);
+                    i--;
+                }
+            }
+
         }
     }
 }
