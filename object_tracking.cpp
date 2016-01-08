@@ -642,6 +642,19 @@ void object_tracking::loadDataTrackPro(const QString &fileName, QVector<trackPro
     }
 }
 
+void object_tracking::tracjectoryWhiteList(QVector<trackPro> &data, const QStringList &whiteList)
+{
+    if(whiteList.isEmpty())
+        return;
+    for(int i = 0; i < data.size(); i++)
+    {
+        for(int j = 0; j < whiteList.size(); j++)
+        {
+            if(data.at(i).ID.at(0))
+        }
+    }
+}
+
 void object_tracking::tracjectoryClassify(QVector<trackPro> &path, const objectTrackingParameters params)
 {
     //check all path

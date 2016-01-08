@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     math_function.cpp \
     dataprocesswindow.cpp \
     objecttrackingform.cpp \
-    qcustomplot/qcustomplot.cpp
+    qcustomplot/qcustomplot.cpp \
+    whitelist.cpp
 
 HEADERS  += mainwindow.h \
     trajectory_tracking.h \
@@ -39,11 +40,13 @@ HEADERS  += mainwindow.h \
     math_function.h \
     dataprocesswindow.h \
     objecttrackingform.h \
-    qcustomplot/qcustomplot.h
+    qcustomplot/qcustomplot.h \
+    whitelist.h
 
 FORMS    += mainwindow.ui \
     dataprocesswindow.ui \
-    objecttrackingform.ui
+    objecttrackingform.ui \
+    whitelist.ui
 
 msvc {
   QMAKE_CXXFLAGS += -openmp -arch:AVX -D "_CRT_SECURE_NO_WARNINGS"

@@ -110,7 +110,7 @@
       <x>20</x>
       <y>230</y>
       <width>221</width>
-      <height>111</height>
+      <height>171</height>
      </rect>
     </property>
     <property name="title">
@@ -123,13 +123,26 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>30</y>
+       <y>80</y>
        <width>181</width>
        <height>61</height>
       </rect>
      </property>
      <property name="text">
       <string>Trajectory Classify</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="current_white_list_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>181</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>White List :</string>
      </property>
     </widget>
    </widget>
@@ -220,6 +233,7 @@
      <string>Setting</string>
     </property>
     <addaction name="actionObject_Tracking"/>
+    <addaction name="actionWhite_List"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSetting"/>
@@ -243,6 +257,11 @@
   <action name="actionOpen_Sensor_Data">
    <property name="text">
     <string>Open Sensor Data</string>
+   </property>
+  </action>
+  <action name="actionWhite_List">
+   <property name="text">
+    <string>White List</string>
    </property>
   </action>
  </widget>

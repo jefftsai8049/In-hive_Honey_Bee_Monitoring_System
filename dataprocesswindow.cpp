@@ -8,6 +8,7 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     ui->setupUi(this);
     OT = new object_tracking;
     OTS = new ObjectTrackingForm;
+    WL = new WhiteList;
 
     connect(this,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
 
@@ -16,6 +17,8 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     connect(OT,SIGNAL(sendProgress(int)),this,SLOT(receiveProgress(int)));
 
     connect(OTS,SIGNAL(setObjectTrackingParameters(objectTrackingParameters)),this,SLOT(setObjectTrackingParameters(objectTrackingParameters)));
+
+    connect(WL,SIGNAL(sendWhiteList(QStringList)),this,SLOT(receiveWhiteList(QStringList)));
 
     OTS->requestObjectTrackingParameters();
     OT->setPathSegmentSize(this->OTParams.segmentSize);
@@ -53,6 +56,15 @@ void DataProcessWindow::receiveLoadDataFinish()
 void DataProcessWindow::receiveProgress(const int &val)
 {
     ui->progressBar->setValue(val);
+}
+
+void DataProcessWindow::receiveWhiteList(const QStringList &whiteList)
+{
+    this->whiteList = whiteList;
+    QString msg = "White List : ";
+    for(int i = 0; i < this->whiteList.size(); i++)
+        msg.append(this->whiteList.at(i));
+    ui->current_white_list_label->setText(msg);
 }
 
 void DataProcessWindow::setObjectTrackingParameters(const objectTrackingParameters &params)
@@ -358,4 +370,9 @@ void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
 
 
     ui->bee_info_widget->replot();
+}
+
+void DataProcessWindow::on_actionWhite_List_triggered()
+{
+    WL->show();
 }

@@ -21,6 +21,8 @@
 //OpenCV
 #include <opencv.hpp>
 
+#include "whitelist.h"
+
 
 struct weatherInfo
 {
@@ -57,6 +59,8 @@ private slots:
 
     void receiveProgress(const int &val);
 
+    void receiveWhiteList(const QStringList &whiteList);
+
     void setObjectTrackingParameters(const objectTrackingParameters &params);
 
     void on_actionOpen_Processed_Data_triggered();
@@ -67,6 +71,8 @@ private slots:
 
     void on_actionOpen_Sensor_Data_triggered();
 
+    void on_actionWhite_List_triggered();
+
 private:
     Ui::DataProcessWindow *ui;
 
@@ -74,11 +80,15 @@ private:
 
     object_tracking *OT;
 
+    WhiteList *WL;
+
     std::vector<track> path;
 
     QVector<trackPro> data;
 
     objectTrackingParameters OTParams;
+
+    QStringList whiteList;
 
     void loadWeatherData(const QStringList &fileNames,QVector<weatherInfo> &weatherData);
 
