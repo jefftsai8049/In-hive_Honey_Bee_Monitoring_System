@@ -222,6 +222,8 @@ int tag_recognition::wordRecognition(cv::Mat &src)
         return resultMap;
     }
 
+
+
 }
 
 int tag_recognition::wordMapping(const int &result)

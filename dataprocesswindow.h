@@ -102,6 +102,8 @@ private:
 
     void getPressure(const QVector<weatherInfo> &weatherData,QVector<double> &x,QVector<double> &y);
 
+    void getDailyBeeInfo(const QVector<trackPro> &data, QVector<QString> &x, QVector<double> &y);
+
     void plotBeeInfo(const QVector<trackPro> &data);
 
 

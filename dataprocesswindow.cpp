@@ -106,11 +106,12 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
     qDebug() << this->data.size();
     OT->tracjectoryWhiteList(this->data,this->whiteList);
-qDebug() << this->data.size();
-//    for(int i = 0; i < this->data.size();i++)
-//    {
-//        qDebug() << this->data.at(i).ID;
-//    }
+    qDebug() << this->data.size();
+    this->plotBeeInfo(this->data);
+    //    for(int i = 0; i < this->data.size();i++)
+    //    {
+    //        qDebug() << this->data.at(i).ID;
+    //    }
     OT->tracjectoryClassify(this->data,this->OTParams);
 }
 
@@ -363,6 +364,32 @@ void DataProcessWindow::getPressure(const QVector<weatherInfo> &weatherData, QVe
     }
 }
 
+void DataProcessWindow::getDailyBeeInfo(const QVector<trackPro> &data, QVector<QString> &x, QVector<double> &y)
+{
+    x.clear();
+    y.clear();
+
+    //int days = data.at(0).startTime.daysTo(data.at(data.size()-1).startTime)+1;
+//    x.resize(days);
+//    y.resize(days);
+
+    double dayCount = 0;
+    QStringList day;
+    for(int i = 0 ; i < data.size(); i++)
+    {
+        if(!day.contains(data.at(i).startTime.toString("dd")))
+        {
+            day << data.at(i).startTime.toString("dd");
+            x.append(data.at(i).startTime.toString("MM-dd"));
+            y.append(dayCount);
+            dayCount = 0;
+        }
+        dayCount++;
+    }
+    y.append(dayCount);
+    y.remove(0);
+}
+
 void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
 {
     //set title font size
@@ -371,12 +398,66 @@ void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
 
     //insert title and set font
     ui->bee_info_widget->plotLayout()->insertRow(0);
-    QCPPlotTitle *beeTitle = new QCPPlotTitle(ui->bee_info_widget, "Daily effectively track");
+    QCPPlotTitle *beeTitle = new QCPPlotTitle(ui->bee_info_widget, "Daily Effectively Track");
     beeTitle->setFont(font);
     ui->bee_info_widget->plotLayout()->addElement(0, 0, beeTitle);
 
+    //get data
+    QVector<QString> x;
+    QVector<double> y;
+    QVector<double> tick;
+    this->getDailyBeeInfo(data,x,y);
+    for(int i = 0; i < x.size(); i++)
+    {
+        tick.append(i+1);
+    }
 
+    //set bar
+    QCPBars *dailyInfo = new QCPBars(ui->bee_info_widget->xAxis,ui->bee_info_widget->yAxis);
+    ui->bee_info_widget->addPlottable(dailyInfo);
+    dailyInfo->setData(tick,y);
+
+    //set color and width
+    QPen pen;
+    pen.setWidth(1.2);
+    pen.setColor(QColor(255,131,0));
+    dailyInfo->setPen(pen);
+    dailyInfo->setBrush(QColor(255, 131, 0, 50));
+
+    //set x axis
+    ui->bee_info_widget->xAxis->setAutoTicks(false);
+    ui->bee_info_widget->xAxis->setAutoTickLabels(false);
+    ui->bee_info_widget->xAxis->setTickVector(tick);
+    ui->bee_info_widget->xAxis->setTickVectorLabels(x);
+    ui->bee_info_widget->xAxis->setTickLabelRotation(60);
+    ui->bee_info_widget->xAxis->setSubTickCount(0);
+    ui->bee_info_widget->xAxis->setTickLength(0, 4);
+    ui->bee_info_widget->xAxis->grid()->setVisible(false);
+    ui->bee_info_widget->xAxis->setRange(0,y.size()+1);
+    ui->bee_info_widget->xAxis->setLabel("Date");
+
+    //set y axis
+    double yMax = 0;
+    for(int i = 0; i < y.size();i++)
+    {
+        if(y.at(i) > yMax)
+            yMax = y.at(i);
+    }
+    ui->bee_info_widget->yAxis->setRange(0,yMax);
+    ui->bee_info_widget->yAxis->grid()->setVisible(true);
+    ui->bee_info_widget->yAxis->setLabel("Number of tracks");
     ui->bee_info_widget->replot();
+
+    //save chart
+    QDir outChart("out/chart");
+    if(!outChart.exists())
+    {
+        outChart.cdUp();
+        outChart.mkdir("chart");
+        outChart.cd("chart");
+
+    }
+    ui->bee_info_widget->savePng(outChart.absolutePath()+"/"+"daily_effectively_track.png");
 }
 
 void DataProcessWindow::on_actionWhite_List_triggered()
