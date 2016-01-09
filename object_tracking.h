@@ -21,6 +21,7 @@
 #define FORGET_TRACKING_TIME 5
 #define SHORTEST_SAMPLE_SIZE 5
 #define MIN_FPS 8.0
+#define PATTERN_TYPES 9
 
 #define DIRECTION_THRESHOLD 30.0
 
@@ -71,7 +72,7 @@ struct trackPro
     QVector<cv::Point> position;
     QVector<char> pattern;
 
-    //QDateTime timeStep(){return (endTime-startTime)/size;}
+    QVector<int> getPatternCount();
 };
 
 
@@ -119,6 +120,8 @@ public:
     QString tracjectoryName(const char &pattern);
 
     void setPathSegmentSize(const int &size);
+
+//    void calculatePatternCount(const trackPro &data, QVector<int> &count);
 
     //for debug
 

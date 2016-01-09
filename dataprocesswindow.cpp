@@ -18,7 +18,7 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
 
     connect(OTS,SIGNAL(setObjectTrackingParameters(objectTrackingParameters)),this,SLOT(setObjectTrackingParameters(objectTrackingParameters)));
 
-    connect(WL,SIGNAL(sendWhiteList(QStringList)),this,SLOT(receiveWhiteList(QStringList)));
+    connect(WL,SIGNAL(sendWhiteList(QStringList,QStringList)),this,SLOT(receiveWhiteList(QStringList,QStringList)));
 
     OTS->requestObjectTrackingParameters();
     OT->setPathSegmentSize(this->OTParams.segmentSize);
@@ -58,12 +58,15 @@ void DataProcessWindow::receiveProgress(const int &val)
     ui->progressBar->setValue(val);
 }
 
-void DataProcessWindow::receiveWhiteList(const QStringList &whiteList)
+void DataProcessWindow::receiveWhiteList(const QStringList &controlWhiteList, const QStringList &experimentWhiteList)
 {
-    this->whiteList = whiteList;
+    this->controlWhiteList = controlWhiteList;
+    this->experimentWhiteList = experimentWhiteList;
     QString msg = "White List : ";
-    for(int i = 0; i < this->whiteList.size(); i++)
-        msg.append(this->whiteList.at(i));
+    for(int i = 0; i < this->controlWhiteList.size(); i++)
+        msg.append(this->controlWhiteList.at(i));
+    for(int i = 0; i < this->experimentWhiteList.size(); i++)
+        msg.append(this->experimentWhiteList.at(i));
     ui->current_white_list_label->setText(msg);
 }
 
@@ -104,15 +107,63 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
-    qDebug() << this->data.size();
-    OT->tracjectoryWhiteList(this->data,this->whiteList);
-    qDebug() << this->data.size();
-    this->plotBeeInfo(this->data);
-    //    for(int i = 0; i < this->data.size();i++)
-    //    {
-    //        qDebug() << this->data.at(i).ID;
-    //    }
+    qDebug() << "before white list filter : " << this->data.size();
+    QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
+    OT->tracjectoryWhiteList(this->data,whiteList);
+    qDebug() << "after white list filter : " << this->data.size();
+
     OT->tracjectoryClassify(this->data,this->OTParams);
+
+    QVector<QVector<double>> group(2);
+    group[0].resize(9);
+    group[1].resize(9);
+    for(int i = 0; i < this->data.size();i++)
+    {
+        int gID = this->controlWhiteList.contains(QString(this->data[i].ID[0]));
+        for(int j = 0; j < 9; j++)
+            group[gID][j] += this->data[i].getPatternCount()[j];
+
+        qDebug() << this->data[i].ID << this->data[i].getPatternCount();
+    }
+    qDebug() << group[0] << group[1];
+    QVector<int> max(2);
+
+    for(int i = 0; i < 9; i++)
+    {
+        if(group[0][i] > max[0])
+            max[0] = group[0][i];
+        if(group[1][i] > max[1])
+            max[1] = group[1][i];
+
+    }
+    for(int i = 0; i < 9; i++)
+    {
+        group[0][i] /= max[0];
+        group[1][i] /= max[1];
+
+    }
+    qDebug() << group[0] << group[1];
+
+    QStringList individualInfoID;
+    QVector< QVector<int> > individualInfoCount;
+    for(int i = 0; i < this->data.size();i++)
+    {
+        QString ID = this->data.at(i).ID;
+        if(individualInfoID.indexOf(ID) == -1)
+        {
+            individualInfoID.append(ID);
+        }
+    }
+    qDebug() << individualInfoID;
+    for(int i = 0; i < individualInfoID.size()-1; i++)
+    {
+        for(int j = i; j < individualInfoID.size(); j++)
+        {
+            if(individualInfoID.at(i)<individualInfoID.at(j))
+                individualInfoID.swap(i,j);
+        }
+    }
+    qDebug() << individualInfoID;
 }
 
 void DataProcessWindow::on_actionObject_Tracking_triggered()
@@ -200,7 +251,7 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->rh_info_widget->yAxis->setLabel("Humidity (%)");
 
     ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setAutoTickStep(false);
-    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*6); // 4 day tickstep
+    ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*12); // 4 day tickstep
     ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelType(QCPAxis::ltDateTime);
     ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::LocalTime);
     ui->rh_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
@@ -212,7 +263,7 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->temp_info_widget->yAxis->setLabel("Temperture (C)");
 
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setAutoTickStep(false);
-    ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*6); // 4 day tickstep
+    ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*12); // 4 day tickstep
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelType(QCPAxis::ltDateTime);
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::LocalTime);
     ui->temp_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
@@ -224,20 +275,20 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     ui->pressure_info_widget->yAxis->setLabel("Air Pressure (hPa)");
 
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setAutoTickStep(false);
-    ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*6); // 4 day tickstep
+    ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickStep(60*10*6*12); // 4 day tickstep
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelType(QCPAxis::ltDateTime);
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::LocalTime);
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setDateTimeFormat("MM-dd hh:mm");
     ui->pressure_info_widget->axisRect()->axis(QCPAxis::atBottom)->setTickLabelRotation(30);
 
     //replot
-    ui->pressure_info_widget->legend->setVisible(true);
+    //ui->pressure_info_widget->legend->setVisible(true);
     ui->pressure_info_widget->replot();
 
-    ui->temp_info_widget->legend->setVisible(true);
+    //ui->temp_info_widget->legend->setVisible(true);
     ui->temp_info_widget->replot();
 
-    ui->rh_info_widget->legend->setVisible(true);
+    //ui->rh_info_widget->legend->setVisible(true);
     ui->rh_info_widget->replot();
 
     //save chart
@@ -370,8 +421,8 @@ void DataProcessWindow::getDailyBeeInfo(const QVector<trackPro> &data, QVector<Q
     y.clear();
 
     //int days = data.at(0).startTime.daysTo(data.at(data.size()-1).startTime)+1;
-//    x.resize(days);
-//    y.resize(days);
+    //    x.resize(days);
+    //    y.resize(days);
 
     double dayCount = 0;
     QStringList day;
@@ -406,11 +457,13 @@ void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
     QVector<QString> x;
     QVector<double> y;
     QVector<double> tick;
+
     this->getDailyBeeInfo(data,x,y);
     for(int i = 0; i < x.size(); i++)
     {
         tick.append(i+1);
     }
+    //qDebug() <<x << y<< tick;
 
     //set bar
     QCPBars *dailyInfo = new QCPBars(ui->bee_info_widget->xAxis,ui->bee_info_widget->yAxis);

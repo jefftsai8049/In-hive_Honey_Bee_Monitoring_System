@@ -15,12 +15,18 @@ WhiteList::~WhiteList()
 
 void WhiteList::on_buttonBox_accepted()
 {
-    QString str = ui->white_list_lineEdit->text();
-    str = str.trimmed();
-    str = str.toUpper();
-    QStringList whiteList = str.split(",");
+    QString controlStr = ui->white_list_control_lineEdit->text();
+    controlStr = controlStr.trimmed();
+    controlStr = controlStr.toUpper();
 
-    emit sendWhiteList(whiteList);
+    QString experimentStr = ui->white_list_experiment_lineEdit->text();
+    experimentStr = experimentStr.trimmed();
+    experimentStr = experimentStr.toUpper();
+
+    QStringList controlWhiteList = controlStr.split(",");
+    QStringList experimentWhiteList = experimentStr.split(",");
+
+    emit sendWhiteList(controlWhiteList,experimentWhiteList);
 
     this->close();
 

@@ -1,5 +1,25 @@
 #include "object_tracking.h"
 
+QVector<int> trackPro::getPatternCount()
+{
+    QVector<int> count(PATTERN_TYPES);
+    for(int i = 0; i < pattern.size();i++)
+    {
+        count[pattern.at(i)]++;
+    }
+    return count;
+}
+
+//cv::Mat trackPro::getPatternCountMat()
+//{
+//    cv::Mat count(1,PATTERN_TYPES,CV_32SC1);
+//    for(int i = 0; i < pattern.size();i++)
+//    {
+//        count.at<int>(1,i)++;
+//    }
+//    return count;
+//}
+
 
 
 int track::size()
@@ -749,6 +769,27 @@ void object_tracking::setPathSegmentSize(const int &size)
     this->segmentSize = size;
 }
 
+//void object_tracking::calculatePatternCount(const trackPro &data, QVector<int> &count)
+//{
+////    enum trajectory{
+////        NO_MOVE,
+////        LOITERING,
+////        FORWARD_MOVE,
+////        RIGHT_MOVE,
+////        LEFT_MOVE,
+////        WAGGLE,
+////        INTERACTION,
+////        FORAGING,
+////        OTHER
+////    };
+//    count.clear();
+//    count.resize(9);
+//    for(int i = 0;i < data.pattern.size();i++)
+//    {
+//        count[data.pattern.at(i)]++;
+//    }
+//}
+
 void object_tracking::drawPathPattern(const QVector<cv::Point> &path)
 {
     int edgeWidth = 20;
@@ -787,4 +828,7 @@ void object_tracking::drawPathPattern(const QVector<cv::Point> &path)
     cv::imshow("Path",src);
     cv::waitKey(1000);
 }
+
+
+
 

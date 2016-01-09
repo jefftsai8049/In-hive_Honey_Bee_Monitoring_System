@@ -34,6 +34,14 @@ struct weatherInfo
     float pressure;
 };
 
+//struct beeInfo
+//{
+//    QString ID;
+//    QVector<int> count;
+
+//    void init(){count.resize(PATTERN_TYPES);}
+//};
+
 
 namespace Ui {
 class DataProcessWindow;
@@ -59,7 +67,7 @@ private slots:
 
     void receiveProgress(const int &val);
 
-    void receiveWhiteList(const QStringList &whiteList);
+    void receiveWhiteList(const QStringList &controlWhiteList,const QStringList &experimentWhiteList);
 
     void setObjectTrackingParameters(const objectTrackingParameters &params);
 
@@ -88,7 +96,9 @@ private:
 
     objectTrackingParameters OTParams;
 
-    QStringList whiteList;
+    QStringList controlWhiteList;
+
+    QStringList experimentWhiteList;
 
     void loadWeatherData(const QStringList &fileNames,QVector<weatherInfo> &weatherData);
 

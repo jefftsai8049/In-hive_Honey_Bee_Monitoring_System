@@ -27,7 +27,7 @@ private:
     Ui::WhiteList *ui;
 
 signals:
-    void sendWhiteList(const QStringList &whiteList);
+    void sendWhiteList(const QStringList &controlWhiteList,const QStringList &experimentWhiteList);
 };
 
 #endif // WHITELIST_H
