@@ -1,6 +1,8 @@
 #include "dataprocesswindow.h"
 #include "ui_dataprocesswindow.h"
 
+QStringList SMUTM;
+
 DataProcessWindow::DataProcessWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DataProcessWindow)
@@ -22,6 +24,10 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
 
     OTS->requestObjectTrackingParameters();
     OT->setPathSegmentSize(this->OTParams.segmentSize);
+
+    SMUTM << "A" << "B" << "C" << "E" << "F" << "G" << "H" << "K" << "L" << "O" << "P" << "R"
+          << "S" << "T" << "U" << "Y" << "Z";
+
 }
 
 DataProcessWindow::~DataProcessWindow()
@@ -117,84 +123,77 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     OT->tracjectoryClassify(this->data,this->OTParams);
 
     //group pattern count and ratio
-    QVector<QVector<double>> group(2);
-    group[0].resize(9);
-    group[1].resize(9);
-    for(int i = 0; i < this->data.size();i++)
+    QVector<QStringList> infoID;
+    infoID << this->controlWhiteList << this->experimentWhiteList;
+    QVector< QVector<double> > infoRatio;
+    this->getGroupBeePatternRation(this->data,infoID,infoRatio);
+
+
+
+    for(int i = 0; i < infoRatio.size(); i++)
     {
-        int gID = this->controlWhiteList.contains(QString(this->data[i].ID[0]));
-        for(int j = 0; j < 9; j++)
-            group[gID][j] += this->data[i].getPatternCount()[j];
+        qDebug() << infoID[i] << infoRatio[i];
     }
-    qDebug() << group[0] << group[1];
 
-    QVector<int> max(2);
-    for(int i = 0; i < 9; i++)
-    {
-        if(group[0][i] > max[0])
-            max[0] = group[0][i];
-        if(group[1][i] > max[1])
-            max[1] = group[1][i];
-
-    }
-    for(int i = 0; i < 9; i++)
-    {
-        group[0][i] /= max[0];
-        group[1][i] /= max[1];
-
-    }
-    qDebug() << group[0] << group[1];
-
-    //individual bee pattern count and ratio
+    //individual pattern ratio
     QStringList individualInfoID;
-    QVector< QVector<int> > individualInfoCount;
-    for(int i = 0; i < this->data.size();i++)
-    {
-        QString ID = this->data.at(i).ID;
-        QVector<int> count = this->data[i].getPatternCount();
+    QVector< QVector<double> > individualInfoRatio;
+    this->getIndividualBeePatternRatio(this->data,individualInfoID,individualInfoRatio);
 
-        int index = individualInfoID.indexOf(ID);
-        if(index == -1)
+    cv::Mat PCAData;
+    PCAData.create(individualInfoRatio.size(),PATTERN_TYPES,CV_64FC1);
+    for(int i = 0; i < individualInfoRatio.size(); i++)
+    {
+        for(int j = 0; j < PATTERN_TYPES; j++)
         {
-            individualInfoID.append(ID);
-            individualInfoCount.append(count);
-        }
-        else
-        {
-            for(int j = 0; j < count.size(); j++)
-            {
-                individualInfoCount[index][j] += count[j];
-            }
+            PCAData.at<double>(i,j) = individualInfoRatio[i][j];
         }
     }
 
-    for(int i = 0; i < individualInfoID.size()-1; i++)
+    //plot 2D-PCA
+    cv::PCA *PCA_2D;
+    PCA_2D = new cv::PCA(PCAData,cv::Mat(),cv::PCA::DATA_AS_ROW,2);
+    PCAData = PCA_2D->project(PCAData);
+    cv::normalize(PCAData,PCAData,0,1,cv::NORM_MINMAX);
+
+    QDir outInfo("out/bee_info");
+    if(!outInfo.exists())
     {
-        for(int j = i; j < individualInfoID.size(); j++)
+        outInfo.cdUp();
+        outInfo.mkdir("bee_info");
+        outInfo.cd("bee_info");
+    }
+    QFile beePCAFile(outInfo.absolutePath()+"/"+"individual_PCA.csv");
+    beePCAFile.open(QIODevice::ReadWrite);
+
+    QTextStream outPCA(&beePCAFile);
+    for(int i = 0; i < individualInfoRatio.size(); i++)
+    {
+        outPCA << individualInfoID[i] << ",";
+        for(int j = 0; j < 2; j++)
         {
-            if(individualInfoID[i][0]>individualInfoID[j][0])
-            {
-                individualInfoID.swap(i,j);
-                QVector<int> temp = individualInfoCount[i];
-                individualInfoCount[i] = individualInfoCount[j];
-                individualInfoCount[j] = temp;
-            }
-            else if(individualInfoID[i][0]==individualInfoID[j][0])
-            {
-                if(individualInfoID[i][1]>individualInfoID[j][1])
-                {
-                    individualInfoID.swap(i,j);
-                    QVector<int> temp = individualInfoCount[i];
-                    individualInfoCount[i] = individualInfoCount[j];
-                    individualInfoCount[j] = temp;
-                }
-            }
+            outPCA << PCAData.at<double>(i,j) << ",";
         }
+        outPCA << "\n";
     }
-    for(int i = 0; i < individualInfoID.size(); i++)
+    beePCAFile.close();
+
+    QFile beeInfoFile(outInfo.absolutePath()+"/"+"individual_info.csv");
+    beeInfoFile.open(QIODevice::ReadWrite);
+
+    QTextStream out(&beeInfoFile);
+
+    for(int i = 0; i < individualInfoRatio.size(); i++)
     {
-        qDebug() << individualInfoID.at(i) << individualInfoCount.at(i);
+        qDebug() << individualInfoID[i] << individualInfoRatio[i];
+        out << individualInfoID[i] << ",";
+        for(int j = 0; j < PATTERN_TYPES; j++)
+        {
+            out << individualInfoRatio[i][j] << ",";
+        }
+        out << "\n";
     }
+    beeInfoFile.close();
 }
 
 void DataProcessWindow::on_actionObject_Tracking_triggered()
@@ -542,6 +541,120 @@ void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
 
     }
     ui->bee_info_widget->savePng(outChart.absolutePath()+"/"+"daily_effectively_track.png");
+}
+
+void DataProcessWindow::getGroupBeePatternRation(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector<QVector<double> > &infoRatio)
+{
+    QVector<QVector<double>> group(infoID.size());
+
+    for(int i = 0; i < infoID.size();i++)
+    {
+        group[i].resize(PATTERN_TYPES);
+
+    }
+    for(int i = 0; i < data.size();i++)
+    {
+        int gID;
+        for(int j = 0; j < infoID.size();j++)
+        {
+            if(infoID[j].contains(QString(data[i].ID[0])))
+            {
+                gID = j;
+                break;
+            }
+        }
+        for(int j = 0; j < PATTERN_TYPES; j++)
+            group[gID][j] += data[i].getPatternCount()[j];
+    }
+
+    QVector<double> sum(infoID.size());
+    for(int i = 0; i < infoID.size(); i++)
+    {
+        for(int j = 0; j < PATTERN_TYPES;j++)
+        {
+            sum[i] += group[i][j];
+
+        }
+    }
+    for(int i = 0; i < infoID.size(); i++)
+    {
+        for(int j = 0; j < PATTERN_TYPES;j++)
+        {
+            group[i][j] /= sum[i];
+        }
+    }
+}
+
+void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoRatio)
+{
+    //individual bee pattern count and ratio
+    for(int i = 0; i < data.size();i++)
+    {
+        QString ID = data.at(i).ID;
+        QVector<double> count = data[i].getPatternCount();
+
+        int index = individualInfoID.indexOf(ID);
+        if(index == -1)
+        {
+            individualInfoID.append(ID);
+            individualInfoRatio.append(count);
+        }
+        else
+        {
+            for(int j = 0; j < count.size(); j++)
+            {
+                individualInfoRatio[index][j] += count[j];
+            }
+        }
+    }
+    //sort
+    for(int i = 0; i < individualInfoID.size()-1; i++)
+    {
+        for(int j = i; j < individualInfoID.size(); j++)
+        {
+            if(individualInfoID[i][0]>individualInfoID[j][0])
+            {
+                individualInfoID.swap(i,j);
+                QVector<double> temp = individualInfoRatio[i];
+                individualInfoRatio[i] = individualInfoRatio[j];
+                individualInfoRatio[j] = temp;
+            }
+            else if(individualInfoID[i][0]==individualInfoID[j][0])
+            {
+                if(individualInfoID[i][1]>individualInfoID[j][1])
+                {
+                    individualInfoID.swap(i,j);
+                    QVector<double> temp = individualInfoRatio[i];
+                    individualInfoRatio[i] = individualInfoRatio[j];
+                    individualInfoRatio[j] = temp;
+                }
+            }
+        }
+    }
+    //get ratio
+    for(int i = 0; i < individualInfoID.size(); i++)
+    {
+        double sum = 0;
+        for(int j = 0; j < individualInfoRatio[i].size(); j++)
+        {
+            sum += individualInfoRatio[i][j];
+        }
+        for(int j = 0; j < individualInfoRatio[i].size(); j++)
+        {
+            individualInfoRatio[i][j] /= sum;
+        }
+    }
+    //remove impossible data
+    for(int i = 0; i < individualInfoID.size(); i++)
+    {
+        if(!SMUTM.contains(QString(individualInfoID[i][1])))
+        {
+            individualInfoID.removeAt(i);
+            individualInfoRatio.removeAt(i);
+            i--;
+        }
+    }
+
 }
 
 void DataProcessWindow::on_actionWhite_List_triggered()

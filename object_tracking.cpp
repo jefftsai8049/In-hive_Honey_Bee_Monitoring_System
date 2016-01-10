@@ -1,8 +1,8 @@
 #include "object_tracking.h"
 
-QVector<int> trackPro::getPatternCount()
+QVector<double> trackPro::getPatternCount()
 {
-    QVector<int> count(PATTERN_TYPES);
+    QVector<double> count(PATTERN_TYPES);
     for(int i = 0; i < pattern.size();i++)
     {
         count[pattern.at(i)]++;

@@ -72,7 +72,7 @@ struct trackPro
     QVector<cv::Point> position;
     QVector<char> pattern;
 
-    QVector<int> getPatternCount();
+    QVector<double> getPatternCount();
 };
 
 

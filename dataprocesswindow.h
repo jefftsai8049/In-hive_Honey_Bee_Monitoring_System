@@ -102,6 +102,7 @@ private:
 
     void loadWeatherData(const QStringList &fileNames,QVector<weatherInfo> &weatherData);
 
+    //weather plot
     void getInHiveTemp(const QVector<weatherInfo> &weatherData,QVector<double> &x,QVector<double> &y);
 
     void getInHiveRH(const QVector<weatherInfo> &weatherData,QVector<double> &x,QVector<double> &y);
@@ -112,10 +113,15 @@ private:
 
     void getPressure(const QVector<weatherInfo> &weatherData,QVector<double> &x,QVector<double> &y);
 
+    //bee info plot
     void getDailyBeeInfo(const QVector<trackPro> &data, QVector<QString> &x, QVector<double> &y);
 
     void plotBeeInfo(const QVector<trackPro> &data);
 
+    //bee analysis
+    void getGroupBeePatternRation(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector< QVector<double> > &infoRatio);
+
+    void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoCount);
 
 signals:
     void sendSystemLog(const QString &log);
