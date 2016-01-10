@@ -107,13 +107,16 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
+    //white list filter
     qDebug() << "before white list filter : " << this->data.size();
     QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
     OT->tracjectoryWhiteList(this->data,whiteList);
     qDebug() << "after white list filter : " << this->data.size();
 
+    //pattern classification
     OT->tracjectoryClassify(this->data,this->OTParams);
 
+    //group pattern count and ratio
     QVector<QVector<double>> group(2);
     group[0].resize(9);
     group[1].resize(9);
@@ -122,12 +125,10 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
         int gID = this->controlWhiteList.contains(QString(this->data[i].ID[0]));
         for(int j = 0; j < 9; j++)
             group[gID][j] += this->data[i].getPatternCount()[j];
-
-        qDebug() << this->data[i].ID << this->data[i].getPatternCount();
     }
     qDebug() << group[0] << group[1];
-    QVector<int> max(2);
 
+    QVector<int> max(2);
     for(int i = 0; i < 9; i++)
     {
         if(group[0][i] > max[0])
@@ -144,26 +145,56 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     }
     qDebug() << group[0] << group[1];
 
+    //individual bee pattern count and ratio
     QStringList individualInfoID;
     QVector< QVector<int> > individualInfoCount;
     for(int i = 0; i < this->data.size();i++)
     {
         QString ID = this->data.at(i).ID;
-        if(individualInfoID.indexOf(ID) == -1)
+        QVector<int> count = this->data[i].getPatternCount();
+
+        int index = individualInfoID.indexOf(ID);
+        if(index == -1)
         {
             individualInfoID.append(ID);
+            individualInfoCount.append(count);
+        }
+        else
+        {
+            for(int j = 0; j < count.size(); j++)
+            {
+                individualInfoCount[index][j] += count[j];
+            }
         }
     }
-    qDebug() << individualInfoID;
+
     for(int i = 0; i < individualInfoID.size()-1; i++)
     {
         for(int j = i; j < individualInfoID.size(); j++)
         {
-            if(individualInfoID.at(i)<individualInfoID.at(j))
+            if(individualInfoID[i][0]>individualInfoID[j][0])
+            {
                 individualInfoID.swap(i,j);
+                QVector<int> temp = individualInfoCount[i];
+                individualInfoCount[i] = individualInfoCount[j];
+                individualInfoCount[j] = temp;
+            }
+            else if(individualInfoID[i][0]==individualInfoID[j][0])
+            {
+                if(individualInfoID[i][1]>individualInfoID[j][1])
+                {
+                    individualInfoID.swap(i,j);
+                    QVector<int> temp = individualInfoCount[i];
+                    individualInfoCount[i] = individualInfoCount[j];
+                    individualInfoCount[j] = temp;
+                }
+            }
         }
     }
-    qDebug() << individualInfoID;
+    for(int i = 0; i < individualInfoID.size(); i++)
+    {
+        qDebug() << individualInfoID.at(i) << individualInfoCount.at(i);
+    }
 }
 
 void DataProcessWindow::on_actionObject_Tracking_triggered()
