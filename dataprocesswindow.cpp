@@ -128,9 +128,7 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     QVector< QVector<double> > infoRatio;
     this->getGroupBeePatternRation(this->data,infoID,infoRatio);
 
-
-
-    for(int i = 0; i < infoRatio.size(); i++)
+    for(int i = 0; i < infoID.size(); i++)
     {
         qDebug() << infoID[i] << infoRatio[i];
     }
@@ -583,6 +581,7 @@ void DataProcessWindow::getGroupBeePatternRation(QVector<trackPro> &data, QVecto
             group[i][j] /= sum[i];
         }
     }
+    infoRatio = group;
 }
 
 void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoRatio)
@@ -639,9 +638,17 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
         {
             sum += individualInfoRatio[i][j];
         }
-        for(int j = 0; j < individualInfoRatio[i].size(); j++)
+        if(sum < BEE_TRACK_COUNT)
         {
-            individualInfoRatio[i][j] /= sum;
+            individualInfoID.removeAt(i);
+            individualInfoRatio.remove(i);
+            i--;
+        }
+        else{
+            for(int j = 0; j < individualInfoRatio[i].size(); j++)
+            {
+                individualInfoRatio[i][j] /= sum;
+            }
         }
     }
     //remove impossible data
@@ -650,7 +657,7 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
         if(!SMUTM.contains(QString(individualInfoID[i][1])))
         {
             individualInfoID.removeAt(i);
-            individualInfoRatio.removeAt(i);
+            individualInfoRatio.remove(i);
             i--;
         }
     }

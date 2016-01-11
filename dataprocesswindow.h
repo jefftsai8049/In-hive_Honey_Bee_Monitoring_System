@@ -1,6 +1,8 @@
 #ifndef DATAPROCESSWINDOW_H
 #define DATAPROCESSWINDOW_H
 
+#define BEE_TRACK_COUNT 100
+
 //QT LIB
 #include <QMainWindow>
 #include <QStringList>
@@ -33,15 +35,6 @@ struct weatherInfo
     float outHiveRH;
     float pressure;
 };
-
-//struct beeInfo
-//{
-//    QString ID;
-//    QVector<int> count;
-
-//    void init(){count.resize(PATTERN_TYPES);}
-//};
-
 
 namespace Ui {
 class DataProcessWindow;
