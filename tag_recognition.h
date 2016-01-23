@@ -55,9 +55,9 @@ public slots:
 
 private:
 
-    void findBlobs(const cv::Mat &binary, std::vector<std::vector<cv::Point2f>> &blobs);
+    void findBlobs(const cv::Mat &binary, std::vector< std::vector<cv::Point2f> > &blobs);
 
-    std::vector<cv::Point2f> findCircleBlobs(std::vector<std::vector<cv::Point2f>> &blobs);
+    std::vector<cv::Point2f> findCircleBlobs(std::vector<  std::vector<cv::Point2f>> &blobs);
 
     float calcualteCOV(std::vector<cv::Point2f> points);
 
@@ -67,9 +67,9 @@ private:
 
     float calculateVar(std::vector<float> val);
 
-    void sortblobs(std::vector<std::vector<cv::Point2f>> &blobs);
+    void sortblobs(std::vector< std::vector<cv::Point2f> > &blobs);
 
-    void sortblobsSize(std::vector<std::vector<cv::Point2f>> &blobs);
+    void sortblobsSize(std::vector< std::vector<cv::Point2f> > &blobs);
 
     std::vector<std::vector<cv::Point2f> > maskRemoveBlobs(cv::Mat &src,std::vector<std::vector<cv::Point2f> > blobs);
 
@@ -83,7 +83,7 @@ private:
 
     void drawBlobMask(cv::Mat &dst,std::vector<std::vector<cv::Point2f> > blobs);
 
-    void findBlobCenter(std::vector<std::vector<cv::Point2f>> blobs,std::vector<cv::Point2f> &blobCenter);
+    void findBlobCenter(std::vector< std::vector<cv::Point2f> > blobs,std::vector<cv::Point2f> &blobCenter);
 
     void cutWords(cv::Mat wordsMask, cv::Mat rawDst, cv::Mat &word1, cv::Mat &word2);
 
