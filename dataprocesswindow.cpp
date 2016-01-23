@@ -546,7 +546,7 @@ void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
 
 void DataProcessWindow::getGroupBeePatternRation(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector<QVector<double> > &infoRatio)
 {
-    QVector<QVector<double>> group(infoID.size());
+    QVector< QVector<double> > group(infoID.size());
 
     for(int i = 0; i < infoID.size();i++)
     {
