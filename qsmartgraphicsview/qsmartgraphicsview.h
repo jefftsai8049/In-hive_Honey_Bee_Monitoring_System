@@ -10,7 +10,11 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QFileInfo>
+#ifndef IN_UNIX
 #include <QGL>
+#else
+#include <qgl.h>
+#endif
 #include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsView>
