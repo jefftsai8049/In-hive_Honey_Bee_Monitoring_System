@@ -13,7 +13,7 @@ extern QReadWriteLock lock;
 QSmartGraphicsView::QSmartGraphicsView(QWidget *parent) :
     QGraphicsView(parent)
 {
-    qRegisterMetaType<std::vector<QPixmap>>("std::vector<QPixmap>");
+    qRegisterMetaType< std::vector<QPixmap> >("std::vector<QPixmap>");
 	this->setTransformationAnchor(QGraphicsView::NoAnchor);
     this->setMouseTracking(true);
     clipboard = QApplication::clipboard();
