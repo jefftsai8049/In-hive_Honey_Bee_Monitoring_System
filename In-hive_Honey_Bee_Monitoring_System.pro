@@ -73,22 +73,22 @@ unix {
                     /usr/local/include/opencv2
 
     LIBS += -L/usr/local/lib \
-            -llibopencv_calib3d \
-            -llibopencv_flann \
-            -llibopencv_imgproc \
-            -llibopencv_photo \
-            -llibopencv_superres \
-            -llibopencv_videostab \
-            -llibopencv_core \
-            -llibopencv_highgui \
-            -llibopencv_ml \
-            -llibopencv_shape \
-            -llibopencv_videoio \
-            -llibopencv_features2d \
-            -llibopencv_imgcodecs \
-            -llibopencv_objdetect \
-            -llibopencv_stitching \
-            -llibopencv_video
+            -lopencv_calib3d \
+            -lopencv_flann \
+            -lopencv_imgproc \
+            -lopencv_photo \
+            -lopencv_superres \
+            -lopencv_videostab \
+            -lopencv_core \
+            -lopencv_highgui \
+            -lopencv_ml \
+            -lopencv_shape \
+            -lopencv_videoio \
+            -lopencv_features2d \
+            -lopencv_imgcodecs \
+            -lopencv_objdetect \
+            -lopencv_stitching \
+            -lopencv_video
 
 }
 RESOURCES += \
