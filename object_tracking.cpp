@@ -457,10 +457,10 @@ void object_tracking::loadDataTrack(const QStringList &fileNames, std::vector<tr
                 track t;
                 QString msg = f.readLine();
                 msg = msg.trimmed();
-                while(msg.at(msg.size()-1) == ",")
+                while(msg.at(msg.size()-1) == ',')
                     msg = msg.left(msg.size()-1);
 
-                QStringList data = msg.split(",");
+                QStringList data = msg.split(',');
                 for(int m = 0; m < data.size(); m=m+5)
                 {
                     t.w1.push_back(data[m].toStdString()[0]);

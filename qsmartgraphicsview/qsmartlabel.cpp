@@ -1,4 +1,4 @@
-#include "qSmartLabel.h"
+#include "qsmartlabel.h"
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
