@@ -57,7 +57,7 @@ private:
 
     void findBlobs(const cv::Mat &binary, std::vector< std::vector<cv::Point2f> > &blobs);
 
-    std::vector<cv::Point2f> findCircleBlobs(std::vector<  std::vector<cv::Point2f>> &blobs);
+    std::vector<cv::Point2f> findCircleBlobs(std::vector< std::vector<cv::Point2f> > &blobs);
 
     float calcualteCOV(std::vector<cv::Point2f> points);
 
