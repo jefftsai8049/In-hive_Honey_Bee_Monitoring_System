@@ -15,7 +15,7 @@ DEFINES += HAVE_OPENCV \
 #        += DEBUG_TAG_RECOGNITION \
 #        += SAVE_TAG_IMAGE \
 #        += DEBUG_OBJECT_TRACKING \
-        += NO_OCL \
+        NO_OCL \
 #        += SHOW_PATTERN_NAME
 
 SOURCES += main.cpp\

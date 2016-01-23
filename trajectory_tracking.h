@@ -16,6 +16,7 @@
 #ifndef NO_OCL
 #include <core/ocl.hpp>
 #endif
+
 #include <tag_recognition.h>
 #include <math_function.h>
 #include <object_tracking.h>

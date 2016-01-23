@@ -14,7 +14,9 @@
 #include <QMap>
 
 #include <opencv.hpp>
+#ifdef IN_UNIX
 #include "omp.h"
+#endif
 #include <core/ocl.hpp>
 
 

@@ -546,7 +546,7 @@ float tag_recognition::calculateVar(std::vector<float> val)
     }
 }
 
-void tag_recognition::sortblobs(std::vector<std::vector<cv::Point2f>> &blobs)
+void tag_recognition::sortblobs(std::vector< std::vector<cv::Point2f> > &blobs)
 {
     //sort blobs by COV
     for (int i = 0;i < blobs.size()-1; i++)
