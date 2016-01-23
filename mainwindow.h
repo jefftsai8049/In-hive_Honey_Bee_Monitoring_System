@@ -28,9 +28,9 @@
 #include <QtSerialPort/QSerialPort>
 
 //Tsai LIB
-#include "trajectory_tracking.h"
-#include "tag_recognition.h"
-#include "dataprocesswindow.h"
+#include <trajectory_tracking.h>
+#include <tag_recognition.h>
+#include <dataprocesswindow.h>
 
 //QSmartGraphicsView
 #include "qsmartgraphicsview/qsmartgraphicsview.h"
