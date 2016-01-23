@@ -152,7 +152,6 @@ void trajectory_tracking::run()
 
     emit sendProcessingProgress(0);
 
-
     //open video file
     std::vector<cv::VideoCapture> cap(3);
     std::vector<float> deviceFPS(3);

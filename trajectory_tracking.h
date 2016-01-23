@@ -9,8 +9,9 @@
 
 #include <stdlib.h>
 #include <math.h>
-
+#ifdef IN_UNIX
 #include <omp.h>
+#endif
 #include <opencv.hpp>
 #ifndef NO_OCL
 #include <core/ocl.hpp>

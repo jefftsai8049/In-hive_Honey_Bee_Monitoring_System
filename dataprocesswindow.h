@@ -116,6 +116,8 @@ private:
 
     void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoCount);
 
+    void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);
+
 signals:
     void sendSystemLog(const QString &log);
 

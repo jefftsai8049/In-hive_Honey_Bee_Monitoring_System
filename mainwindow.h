@@ -8,8 +8,9 @@
 #include "ml.hpp"
 
 //OpenMP
+#ifdef IN_UNIX
 #include <omp.h>
-
+#endif
 //QT
 #include <QMainWindow>
 #include <QDataStream>

@@ -47,21 +47,49 @@ FORMS    += mainwindow.ui \
     dataprocesswindow.ui \
     objecttrackingform.ui \
     whitelist.ui
+win32 {
+    msvc {
+        QMAKE_CXXFLAGS += -openmp -arch:AVX -D "_CRT_SECURE_NO_WARNINGS"
+        QMAKE_CXXFLAGS_RELEASE *= -O2
+    }
 
-msvc {
-  QMAKE_CXXFLAGS += -openmp -arch:AVX -D "_CRT_SECURE_NO_WARNINGS"
-  QMAKE_CXXFLAGS_RELEASE *= -O2
+    INCLUDEPATH += C:\\opencv300_vc2013\\include \
+                   C:\\opencv300_vc2013\\include\\opencv \
+                   C:\\opencv300_vc2013\\include\\opencv2 \
+
+
+    LIBS += -LC:\\opencv300_vc2013\\x64\\lib \
+            -lopencv_world300 \
+            -lopencv_ts300 \
+            -lopencv_world300d \
+            -lopencv_ts300d
 }
 
-INCLUDEPATH += C:\\opencv300_vc2013\\include \
-               C:\\opencv300_vc2013\\include\\opencv \
-               C:\\opencv300_vc2013\\include\\opencv2 \
+unix {
+    DEFINES += IN_UNIX
 
+    INCLUDEPATH += /usr/local/include \
+                    /usr/local/include/opencv \
+                    /usr/local/include/opencv2
 
-LIBS +=  C:\\opencv300_vc2013\\x64\\lib\\opencv_world300.lib \
-         C:\\opencv300_vc2013\\x64\\lib\\opencv_ts300.lib \
-         C:\\opencv300_vc2013\\x64\\lib\\opencv_world300d.lib \
-         C:\\opencv300_vc2013\\x64\\lib\\opencv_ts300d.lib
+    LIBS += -L/usr/local/lib \
+            -llibopencv_calib3d \
+            -llibopencv_flann \
+            -llibopencv_imgproc \
+            -llibopencv_photo \
+            -llibopencv_superres \
+            -llibopencv_videostab \
+            -llibopencv_core \
+            -llibopencv_highgui \
+            -llibopencv_ml \
+            -llibopencv_shape \
+            -llibopencv_videoio \
+            -llibopencv_features2d \
+            -llibopencv_imgcodecs \
+            -llibopencv_objdetect \
+            -llibopencv_stitching \
+            -llibopencv_video
 
+}
 RESOURCES += \
     icon.qrc

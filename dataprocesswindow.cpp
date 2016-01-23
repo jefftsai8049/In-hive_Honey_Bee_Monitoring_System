@@ -138,6 +138,9 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     QVector< QVector<double> > individualInfoRatio;
     this->getIndividualBeePatternRatio(this->data,individualInfoID,individualInfoRatio);
 
+    //get transition matrix
+
+
     cv::Mat PCAData;
     PCAData.create(individualInfoRatio.size(),PATTERN_TYPES,CV_64FC1);
     for(int i = 0; i < individualInfoRatio.size(); i++)
@@ -662,6 +665,16 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
         }
     }
 
+}
+
+void DataProcessWindow::getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition)
+{
+//    for(int i = 0; i < data.size(); i++)
+//    {
+//        if()
+
+//    }
+    //transition.create(PATTERN_TYPES,PATTERN_TYPES,CV_8UC1);
 }
 
 void DataProcessWindow::on_actionWhite_List_triggered()
