@@ -105,6 +105,7 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
     //qDebug() << this->data.size();
 
     ui->trajectory_classify_pushButton->setEnabled(true);
+    ui->white_list_smoothing_pushButton->setEnabled(true);
 
 
     //plot chart
@@ -113,12 +114,6 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
-    //white list filter
-    qDebug() << "before white list filter : " << this->data.size();
-    QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
-    OT->tracjectoryWhiteList(this->data,whiteList);
-    qDebug() << "after white list filter : " << this->data.size();
-
     //pattern classification
     OT->tracjectoryClassify(this->data,this->OTParams);
 
@@ -669,15 +664,40 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
 
 void DataProcessWindow::getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition)
 {
-//    for(int i = 0; i < data.size(); i++)
-//    {
-//        if()
+    //    for(int i = 0; i < data.size(); i++)
+    //    {
+    //        if()
 
-//    }
+    //    }
     //transition.create(PATTERN_TYPES,PATTERN_TYPES,CV_8UC1);
 }
 
 void DataProcessWindow::on_actionWhite_List_triggered()
 {
     WL->show();
+}
+
+void DataProcessWindow::on_mdl_pushButton_clicked()
+{
+    for(int i = 0; i < this->data.size(); i++)
+    {
+        mdl mdlProcess(&this->data[i],500);
+        qDebug() << this->data[i].ID << i << this->data.size() << this->data[i].size << mdlProcess.getCriticalPoint();
+        cv::Mat src = cv::Mat::zeros(1600,3600,CV_8UC3);
+        cv::Mat dstTrajectory = this->data[i].getTrajectoryPlot(src);
+        cv::Mat dstCritical = this->data[i].getCriticalPointPlot(dstTrajectory);
+        cv::resize(dstCritical,dstCritical,cv::Size(1800,800));
+        cv::imshow("dst",dstCritical);
+        cv::waitKey(3000);
+    }
+
+}
+
+void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
+{
+    //white list filter
+    qDebug() << "before white list filter : " << this->data.size();
+    QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
+    OT->tracjectoryWhiteList(this->data,whiteList);
+    qDebug() << "after white list filter : " << this->data.size();
 }

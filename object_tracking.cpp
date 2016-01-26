@@ -10,6 +10,26 @@ QVector<double> trackPro::getPatternCount()
     return count;
 }
 
+cv::Mat trackPro::getTrajectoryPlot(const cv::Mat &src)
+{
+    cv::Mat dst = src.clone();
+    for(int i = 0; i < position.size()-1; i++)
+    {
+        cv::line(dst,position[i],position[i+1],cv::Scalar(0,255,0));
+    }
+    return dst;
+}
+
+cv::Mat trackPro::getCriticalPointPlot(const cv::Mat &src)
+{
+    cv::Mat dst = src.clone();
+    for(int i = 0; i < criticalPointIndex.size(); i++)
+    {
+        cv::circle(dst,position[criticalPointIndex[i]],4,cv::Scalar(0,0,255),2);
+    }
+    return dst;
+}
+
 //cv::Mat trackPro::getPatternCountMat()
 //{
 //    cv::Mat count(1,PATTERN_TYPES,CV_32SC1);

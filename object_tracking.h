@@ -25,7 +25,7 @@
 
 #define DIRECTION_THRESHOLD 30.0
 
-enum trajectory{
+enum pattern{
     NO_MOVE,
     LOITERING,
     FORWARD_MOVE,
@@ -72,7 +72,11 @@ struct trackPro
     QVector<cv::Point> position;
     QVector<char> pattern;
 
+    QVector<int> criticalPointIndex;
+
     QVector<double> getPatternCount();
+    cv::Mat getTrajectoryPlot(const cv::Mat &src);
+    cv::Mat getCriticalPointPlot(const cv::Mat &src);
 };
 
 

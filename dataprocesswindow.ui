@@ -110,28 +110,12 @@
       <x>20</x>
       <y>230</y>
       <width>221</width>
-      <height>171</height>
+      <height>141</height>
      </rect>
     </property>
     <property name="title">
      <string>Step 4.</string>
     </property>
-    <widget class="QPushButton" name="trajectory_classify_pushButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>80</y>
-       <width>181</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Trajectory Classify</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="current_white_list_label">
      <property name="geometry">
       <rect>
@@ -143,6 +127,23 @@
      </property>
      <property name="text">
       <string>White List :</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="white_list_smoothing_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>181</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>White List Filter 
+and Smoothing</string>
      </property>
     </widget>
    </widget>
@@ -208,6 +209,35 @@
       </property>
      </widget>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="mdl_pushButton">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>440</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>MDL</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="trajectory_classify_pushButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>380</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Trajectory Classify</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

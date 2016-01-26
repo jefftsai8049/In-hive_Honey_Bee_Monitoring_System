@@ -16,6 +16,7 @@
 //Tsai LIB
 #include "object_tracking.h"
 #include "objecttrackingform.h"
+#include "mdl.h"
 
 //QCustomPlot LIB
 #include <qcustomplot/qcustomplot.h>
@@ -74,6 +75,10 @@ private slots:
 
     void on_actionWhite_List_triggered();
 
+    void on_mdl_pushButton_clicked();
+
+    void on_white_list_smoothing_pushButton_clicked();
+
 private:
     Ui::DataProcessWindow *ui;
 
@@ -116,6 +121,7 @@ private:
 
     void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoCount);
 
+    //testing...
     void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);
 
 signals:

@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     dataprocesswindow.cpp \
     objecttrackingform.cpp \
     qcustomplot/qcustomplot.cpp \
-    whitelist.cpp
+    whitelist.cpp \
+    mdl.cpp
 
 HEADERS  += mainwindow.h \
     trajectory_tracking.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     dataprocesswindow.h \
     objecttrackingform.h \
     qcustomplot/qcustomplot.h \
-    whitelist.h
+    whitelist.h \
+    mdl.h
 
 FORMS    += mainwindow.ui \
     dataprocesswindow.ui \
