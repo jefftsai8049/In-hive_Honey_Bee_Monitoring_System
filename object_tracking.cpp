@@ -411,29 +411,61 @@ QString object_tracking::voting(track path)
     return result;
 }
 
+void object_tracking::trajectoryFilter(QVector<cv::Point> &path)
+{
+    for(int i = 0; i < path.size()-2; i++)
+    {
+        cv::Point diff;
+        diff = path[i+1]-path[i];
+        //qDebug() << pow(diff.x,2)+pow(diff.y,2);
+        if(pow(diff.x,2)+pow(diff.y,2) > 100)
+        {
+            path.remove(i+1);
+            //path[j].position[i+1] = cv::Point((path[j].position[i+2].x+path[j].position[i].x)/2,(path[j].position[i+2].y+path[j].position[i].y)/2);
+            //path[j].position[i+1] = cv::Point(0,0);
+        }
+    }
+
+}
+
 QVector<cv::Point> object_tracking::interpolation(const std::vector<cv::Point> &position, const std::vector<QDateTime> &time)
 {
+
+    QVector<cv::Point> positionOld = QVector<cv::Point>::fromStdVector(position);
+    for(int i = 0; i < positionOld.size()-2; i++)
+    {
+        cv::Point diff;
+        diff = positionOld[i+1]-positionOld[i];
+        //qDebug() << pow(diff.x,2)+pow(diff.y,2);
+        if(pow(diff.x,2)+pow(diff.y,2) > 1000)
+        {
+            positionOld.remove(i+1);
+            //path[j].position[i+1] = cv::Point((path[j].position[i+2].x+path[j].position[i].x)/2,(path[j].position[i+2].y+path[j].position[i].y)/2);
+            //path[j].position[i+1] = cv::Point(0,0);
+        }
+    }
+
     int minTimeStep;
     minTimeStep = this->minTimeStep(time);
     //qDebug() << minTimeStep;
 
     QVector<cv::Point> positionNew;
 
-    for(int i = 0; i < time.size()-1; i++)
+    for(int i = 0; i < positionOld.size()-1; i++)
     {
-        positionNew.append(position[i]);
+        positionNew.append(positionOld[i]);
         int timeGap = time[i].msecsTo(time[i+1]);
         if(timeGap > minTimeStep)
         {
             int cSize = timeGap/minTimeStep-1;
             for(int j = 0; j < cSize; j++)
             {
-                cv::Point cPoint(position[i]+(j+1/cSize+1)*(position[i+1]-position[i]));
+                cv::Point cPoint(positionOld[i]+(j+1/cSize+1)*(positionOld[i+1]-positionOld[i]));
                 positionNew.append(cPoint);
             }
         }
     }
-    positionNew.append(position[position.size()-1]);
+    positionNew.append(positionOld[positionOld.size()-1]);
     return positionNew;
 }
 
@@ -623,7 +655,8 @@ void object_tracking::rawDataPreprocessing(const std::vector<track> *path, QVect
         TP.ID = this->voting(path->at(i));
         TP.startTime = path->at(i).time[0];
         TP.endTime = path->at(i).time[path->at(i).time.size()-1];
-        TP.position = this->interpolation(path->at(i).position,path->at(i).time);
+        TP.position = QVector<cv::Point>::fromStdVector(path->at(i).position);
+        //TP.position = this->interpolation(path->at(i).position,path->at(i).time);
         TP.size = TP.position.size();
         TPVector->append(TP);
         emit sendProgress((i+1)*100/path->size());

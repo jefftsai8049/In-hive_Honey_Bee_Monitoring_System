@@ -681,6 +681,7 @@ void DataProcessWindow::on_mdl_pushButton_clicked()
 {
     for(int i = 0; i < this->data.size(); i++)
     {
+
         mdl mdlProcess(&this->data[i],500);
         qDebug() << this->data[i].ID << i << this->data.size() << this->data[i].size << mdlProcess.getCriticalPoint();
         cv::Mat src = cv::Mat::zeros(1600,3600,CV_8UC3);
@@ -700,4 +701,5 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
     OT->tracjectoryWhiteList(this->data,whiteList);
     qDebug() << "after white list filter : " << this->data.size();
+    //OT->trajectoryFilter(this->data);
 }

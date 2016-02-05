@@ -105,6 +105,8 @@ public:
 
     QString voting(track path);
 
+    void trajectoryFilter(QVector<cv::Point> &path);
+
     QVector<cv::Point> interpolation(const std::vector<cv::Point> &position, const std::vector<QDateTime> &time);
 
     void saveTrackPro(const QVector<trackPro> &path,const QString &fileName);
