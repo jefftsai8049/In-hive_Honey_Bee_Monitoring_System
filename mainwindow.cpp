@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
 
     //trajectory tracking parameters setting
-    TT->setTagBinaryThreshold(ui->binarythreshold_spinBox->value());
+    //TT->setTagBinaryThreshold(ui->binarythreshold_spinBox->value());
 
     //load stitching model file
     QFile manulStitchModel("model/manual_stitching.xml");
