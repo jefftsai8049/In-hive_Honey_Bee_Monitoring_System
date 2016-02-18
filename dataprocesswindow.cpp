@@ -45,6 +45,7 @@ void DataProcessWindow::on_data_preprocessing_pushButton_clicked()
 
     //set next button enable
     ui->trajectory_classify_pushButton->setEnabled(true);
+    ui->white_list_smoothing_pushButton->setEnabled(true);
 
 
 }
@@ -689,7 +690,7 @@ void DataProcessWindow::on_mdl_pushButton_clicked()
         cv::Mat dstCritical = this->data[i].getCriticalPointPlot(dstTrajectory);
         cv::resize(dstCritical,dstCritical,cv::Size(1800,800));
         cv::imshow("dst",dstCritical);
-        cv::waitKey(3000);
+        cv::waitKey(1000);
     }
 
 }
