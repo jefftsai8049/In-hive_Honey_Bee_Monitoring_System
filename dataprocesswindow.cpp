@@ -752,10 +752,103 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
         if(!isInList)
         {
             beeInfo[day].IDList.append(this->data[i].ID);
-            beeInfo[day].trjectoryCount.append(1);
+            beeInfo[day].trajectoryCount.append(1);
             IDNumber = beeInfo[day].IDList.size();
         }
-        beeInfo[day].trjectoryCount[IDNumber]++;
+        beeInfo[day].trajectoryCount[IDNumber]++;
+    }
+
+    //get outlier list
+    QStringList outlierDate;
+    QVector< QStringList > outlierList;
+    for(int i = 0; i < beeInfo.size(); i++)
+    {
+        outlierDate.append(beeInfo[i].date);
+        QStringList outlier;
+        for(int j = 0; j < beeInfo[i].trajectoryCount.size();j++)
+        {
+            if(beeInfo[i].trajectoryCount[j] < 5)
+                outlier.append(beeInfo[i].IDList[j]);
+        }
+        outlierList.append(outlier);
+
+    }
+    qDebug() << outlierDate << outlierList;
+    //remove some outlier
+    for(int i = 0; i < this->data.size(); i++)
+    {
+        //toString("yyyy-MM-dd")
+        int whichDay;
+        for(int j = 0; j < outlierDate.size(); j++)
+        {
+            if(outlierDate[j] == this->data[i].startTime.toString("yyyy-MM-dd"))
+            {
+                whichDay = j;
+                break;
+            }
+        }
+        for(int j = 0; j < outlierList[whichDay].size(); j++)
+        {
+//            qDebug() << i << j;
+//            qDebug() << outlierDate[whichDay];
+//            qDebug() << this->data[i].ID << outlierList[whichDay][j];
+            if(this->data[i].ID == outlierList[whichDay][j])
+            {
+
+                qDebug() << "kick";
+                this->data.remove(i);
+                i--;
+                break;
+            }
+        }
+    }
+
+    emit sendSystemLog("after remove outlier : "+QString::number(this->data.size()));
+
+    //get daily info
+//    QVector<beeDailyInfo> beeInfo;
+    beeInfo.clear();
+    for(int i = 0;i < this->data.size();i++)
+    {
+        bool isExist = 0;
+        int day = 0;
+        QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
+        for(int j = 0; j < beeInfo.size();j++)
+        {
+            if(beeDate == beeInfo[j].date)
+            {
+                isExist = 1;
+                day = j;
+                break;
+            }
+        }
+        if(!isExist)
+        {
+            beeDailyInfo dailyInfo;
+            dailyInfo.date = beeDate;
+            beeInfo.append(dailyInfo);
+            isExist = 1;
+            day = beeInfo.size()-1;
+        }
+
+        bool isInList = 0;
+        int IDNumber;
+        for(int j = 0; j < beeInfo[day].IDList.size();j++)
+        {
+            if(beeInfo[day].IDList[j] == this->data[i].ID)
+            {
+                isInList = 1;
+                IDNumber = j;
+                break;
+            }
+        }
+        if(!isInList)
+        {
+            beeInfo[day].IDList.append(this->data[i].ID);
+            beeInfo[day].trajectoryCount.append(1);
+            IDNumber = beeInfo[day].IDList.size();
+        }
+        beeInfo[day].trajectoryCount[IDNumber]++;
     }
 
     //show bee daily info
@@ -763,10 +856,10 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     {
         qDebug() << beeInfo[i].date;
         qDebug() << beeInfo[i].IDList;
-        qDebug() << beeInfo[i].trjectoryCount;
+        qDebug() << beeInfo[i].trajectoryCount;
     }
 
-    //save
+    //save daily info
     QDir outInfo("out/bee_info");
     if(!outInfo.exists())
     {
@@ -789,13 +882,14 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
         out << "\n";
         for(int j = 0; j < beeInfo[i].IDList.size();j++)
         {
-            out << beeInfo[i].trjectoryCount[j];
-            if(j != beeInfo[i].trjectoryCount.size()-1)
+            out << beeInfo[i].trajectoryCount[j];
+            if(j != beeInfo[i].trajectoryCount.size()-1)
                 out << ",";
         }
         out << "\n";
     }
     dailyNumberFile.close();
+    emit sendSystemLog("Daily Info File Saved!");
 
 
 

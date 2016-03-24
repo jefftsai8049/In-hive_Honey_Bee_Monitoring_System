@@ -41,7 +41,7 @@ struct beeDailyInfo
 {
     QString date;
     QStringList IDList;
-    QVector<int> trjectoryCount;
+    QVector<int> trajectoryCount;
 };
 
 namespace Ui {

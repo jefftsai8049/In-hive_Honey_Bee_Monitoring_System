@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1007</width>
+    <width>1211</width>
     <height>776</height>
    </rect>
   </property>
@@ -142,15 +142,15 @@
       </rect>
      </property>
      <property name="text">
-      <string>White List Filter 
-and Smoothing</string>
+      <string>White List Filter
+Remove outlier</string>
      </property>
     </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>480</x>
       <y>20</y>
       <width>691</width>
       <height>591</height>
@@ -213,8 +213,8 @@ and Smoothing</string>
    <widget class="QPushButton" name="mdl_pushButton">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>460</y>
+      <x>280</x>
+      <y>430</y>
       <width>181</width>
       <height>61</height>
      </rect>
@@ -230,7 +230,7 @@ and Smoothing</string>
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>380</y>
+      <y>430</y>
       <width>181</width>
       <height>61</height>
      </rect>
@@ -239,13 +239,26 @@ and Smoothing</string>
      <string>Trajectory Classify</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>380</y>
+      <width>331</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Step 5. Trajectory Classify(Fix Lenght)</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1007</width>
+     <width>1211</width>
      <height>21</height>
     </rect>
    </property>
