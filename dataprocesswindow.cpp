@@ -109,8 +109,8 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
     ui->white_list_smoothing_pushButton->setEnabled(true);
 
 
-    //plot chart
-    this->plotBeeInfo(this->data);
+    //    //plot chart
+    //    this->plotBeeInfo(this->data);
 }
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
@@ -148,10 +148,13 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     }
 
     //plot 2D-PCA
+    int dims = 2;
+
     cv::PCA *PCA_2D;
-    PCA_2D = new cv::PCA(PCAData,cv::Mat(),cv::PCA::DATA_AS_ROW,2);
+    PCA_2D = new cv::PCA(PCAData,cv::Mat(),cv::PCA::DATA_AS_ROW,dims);
     PCAData = PCA_2D->project(PCAData);
     cv::normalize(PCAData,PCAData,0,1,cv::NORM_MINMAX);
+    qDebug() << PCA_2D->eigenvalues.cols << PCA_2D->eigenvalues.rows;
 
     QDir outInfo("out/bee_info");
     if(!outInfo.exists())
@@ -167,7 +170,7 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     for(int i = 0; i < individualInfoRatio.size(); i++)
     {
         outPCA << individualInfoID[i] << ",";
-        for(int j = 0; j < 2; j++)
+        for(int j = 0; j < dims; j++)
         {
             outPCA << PCAData.at<double>(i,j) << ",";
         }
@@ -682,7 +685,6 @@ void DataProcessWindow::on_mdl_pushButton_clicked()
 {
     for(int i = 0; i < this->data.size(); i++)
     {
-
         mdl mdlProcess(&this->data[i],500);
         qDebug() << this->data[i].ID << i << this->data.size() << this->data[i].size << mdlProcess.getCriticalPoint();
         cv::Mat src = cv::Mat::zeros(1600,3600,CV_8UC3);
@@ -697,10 +699,104 @@ void DataProcessWindow::on_mdl_pushButton_clicked()
 
 void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 {
+
+    //if without setting whitelist
+    if((this->controlWhiteList+this->experimentWhiteList).isEmpty())
+        WL->exec();
+
     //white list filter
-    qDebug() << "before white list filter : " << this->data.size();
+    emit sendSystemLog("before white list filter : "+QString::number(this->data.size()));
     QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
     OT->tracjectoryWhiteList(this->data,whiteList);
-    qDebug() << "after white list filter : " << this->data.size();
-    //OT->trajectoryFilter(this->data);
+    emit sendSystemLog("after white list filter : "+QString::number(this->data.size()));
+
+    //plot chart
+    this->plotBeeInfo(this->data);
+
+    //get daily info
+    QVector<beeDailyInfo> beeInfo;
+    for(int i = 0;i < this->data.size();i++)
+    {
+        bool isExist = 0;
+        int day = 0;
+        QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
+        for(int j = 0; j < beeInfo.size();j++)
+        {
+            if(beeDate == beeInfo[j].date)
+            {
+                isExist = 1;
+                day = j;
+                break;
+            }
+        }
+        if(!isExist)
+        {
+            beeDailyInfo dailyInfo;
+            dailyInfo.date = beeDate;
+            beeInfo.append(dailyInfo);
+            isExist = 1;
+            day = beeInfo.size()-1;
+        }
+
+        bool isInList = 0;
+        int IDNumber;
+        for(int j = 0; j < beeInfo[day].IDList.size();j++)
+        {
+            if(beeInfo[day].IDList[j] == this->data[i].ID)
+            {
+                isInList = 1;
+                IDNumber = j;
+                break;
+            }
+        }
+        if(!isInList)
+        {
+            beeInfo[day].IDList.append(this->data[i].ID);
+            beeInfo[day].trjectoryCount.append(1);
+            IDNumber = beeInfo[day].IDList.size();
+        }
+        beeInfo[day].trjectoryCount[IDNumber]++;
+    }
+
+    //show bee daily info
+    for(int i = 0; i < beeInfo.size(); i++)
+    {
+        qDebug() << beeInfo[i].date;
+        qDebug() << beeInfo[i].IDList;
+        qDebug() << beeInfo[i].trjectoryCount;
+    }
+
+    //save
+    QDir outInfo("out/bee_info");
+    if(!outInfo.exists())
+    {
+        outInfo.cdUp();
+        outInfo.mkdir("bee_info");
+        outInfo.cd("bee_info");
+    }
+    QFile dailyNumberFile(outInfo.absolutePath()+"/dailyInfo.csv");
+    dailyNumberFile.open(QIODevice::WriteOnly);
+    QTextStream out(&dailyNumberFile);
+    for(int i = 0; i < beeInfo.size(); i++)
+    {
+        out << beeInfo[i].date << "\n";
+        for(int j = 0; j < beeInfo[i].IDList.size();j++)
+        {
+            out << beeInfo[i].IDList[j];
+            if(j != beeInfo[i].IDList.size()-1)
+                out << ",";
+        }
+        out << "\n";
+        for(int j = 0; j < beeInfo[i].IDList.size();j++)
+        {
+            out << beeInfo[i].trjectoryCount[j];
+            if(j != beeInfo[i].trjectoryCount.size()-1)
+                out << ",";
+        }
+        out << "\n";
+    }
+    dailyNumberFile.close();
+
+
+
 }

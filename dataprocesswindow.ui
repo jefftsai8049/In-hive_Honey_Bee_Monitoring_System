@@ -265,8 +265,14 @@ and Smoothing</string>
     <addaction name="actionObject_Tracking"/>
     <addaction name="actionWhite_List"/>
    </widget>
+   <widget class="QMenu" name="menuExperiment">
+    <property name="title">
+     <string>Experiment</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSetting"/>
+   <addaction name="menuExperiment"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen_Raw_Data">

@@ -37,6 +37,13 @@ struct weatherInfo
     float pressure;
 };
 
+struct beeDailyInfo
+{
+    QString date;
+    QStringList IDList;
+    QVector<int> trjectoryCount;
+};
+
 namespace Ui {
 class DataProcessWindow;
 }
