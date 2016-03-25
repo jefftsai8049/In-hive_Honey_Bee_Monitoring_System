@@ -252,6 +252,19 @@ Remove outlier</string>
      <string>Step 5. Trajectory Classify(Fix Lenght)</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="test_pushButton">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>500</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Test</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

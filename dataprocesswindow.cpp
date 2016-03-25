@@ -666,6 +666,54 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
 
 }
 
+void DataProcessWindow::getDailyInfo(QVector<beeDailyInfo> &beeInfo)
+{
+    beeInfo.clear();
+//    QVector<beeDailyInfo> beeInfo;
+    for(int i = 0;i < this->data.size();i++)
+    {
+        bool isExist = 0;
+        int day = 0;
+        QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
+        for(int j = 0; j < beeInfo.size();j++)
+        {
+            if(beeDate == beeInfo[j].date)
+            {
+                isExist = 1;
+                day = j;
+                break;
+            }
+        }
+        if(!isExist)
+        {
+            beeDailyInfo dailyInfo;
+            dailyInfo.date = beeDate;
+            beeInfo.append(dailyInfo);
+            isExist = 1;
+            day = beeInfo.size()-1;
+        }
+
+        bool isInList = 0;
+        int IDNumber;
+        for(int j = 0; j < beeInfo[day].IDList.size();j++)
+        {
+            if(beeInfo[day].IDList[j] == this->data[i].ID)
+            {
+                isInList = 1;
+                IDNumber = j;
+                break;
+            }
+        }
+        if(!isInList)
+        {
+            beeInfo[day].IDList.append(this->data[i].ID);
+            beeInfo[day].trajectoryCount.append(1);
+            IDNumber = beeInfo[day].IDList.size();
+        }
+        beeInfo[day].trajectoryCount[IDNumber]++;
+    }
+}
+
 void DataProcessWindow::getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition)
 {
     //    for(int i = 0; i < data.size(); i++)
@@ -710,53 +758,9 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     OT->tracjectoryWhiteList(this->data,whiteList);
     emit sendSystemLog("after white list filter : "+QString::number(this->data.size()));
 
-    //plot chart
-    this->plotBeeInfo(this->data);
-
     //get daily info
     QVector<beeDailyInfo> beeInfo;
-    for(int i = 0;i < this->data.size();i++)
-    {
-        bool isExist = 0;
-        int day = 0;
-        QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
-        for(int j = 0; j < beeInfo.size();j++)
-        {
-            if(beeDate == beeInfo[j].date)
-            {
-                isExist = 1;
-                day = j;
-                break;
-            }
-        }
-        if(!isExist)
-        {
-            beeDailyInfo dailyInfo;
-            dailyInfo.date = beeDate;
-            beeInfo.append(dailyInfo);
-            isExist = 1;
-            day = beeInfo.size()-1;
-        }
-
-        bool isInList = 0;
-        int IDNumber;
-        for(int j = 0; j < beeInfo[day].IDList.size();j++)
-        {
-            if(beeInfo[day].IDList[j] == this->data[i].ID)
-            {
-                isInList = 1;
-                IDNumber = j;
-                break;
-            }
-        }
-        if(!isInList)
-        {
-            beeInfo[day].IDList.append(this->data[i].ID);
-            beeInfo[day].trajectoryCount.append(1);
-            IDNumber = beeInfo[day].IDList.size();
-        }
-        beeInfo[day].trajectoryCount[IDNumber]++;
-    }
+    getDailyInfo(beeInfo);
 
     //get outlier list
     QStringList outlierDate;
@@ -777,7 +781,6 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     //remove some outlier
     for(int i = 0; i < this->data.size(); i++)
     {
-        //toString("yyyy-MM-dd")
         int whichDay;
         for(int j = 0; j < outlierDate.size(); j++)
         {
@@ -789,13 +792,8 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
         }
         for(int j = 0; j < outlierList[whichDay].size(); j++)
         {
-//            qDebug() << i << j;
-//            qDebug() << outlierDate[whichDay];
-//            qDebug() << this->data[i].ID << outlierList[whichDay][j];
             if(this->data[i].ID == outlierList[whichDay][j])
             {
-
-                qDebug() << "kick";
                 this->data.remove(i);
                 i--;
                 break;
@@ -806,50 +804,8 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     emit sendSystemLog("after remove outlier : "+QString::number(this->data.size()));
 
     //get daily info
-//    QVector<beeDailyInfo> beeInfo;
-    beeInfo.clear();
-    for(int i = 0;i < this->data.size();i++)
-    {
-        bool isExist = 0;
-        int day = 0;
-        QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
-        for(int j = 0; j < beeInfo.size();j++)
-        {
-            if(beeDate == beeInfo[j].date)
-            {
-                isExist = 1;
-                day = j;
-                break;
-            }
-        }
-        if(!isExist)
-        {
-            beeDailyInfo dailyInfo;
-            dailyInfo.date = beeDate;
-            beeInfo.append(dailyInfo);
-            isExist = 1;
-            day = beeInfo.size()-1;
-        }
+    getDailyInfo(beeInfo);
 
-        bool isInList = 0;
-        int IDNumber;
-        for(int j = 0; j < beeInfo[day].IDList.size();j++)
-        {
-            if(beeInfo[day].IDList[j] == this->data[i].ID)
-            {
-                isInList = 1;
-                IDNumber = j;
-                break;
-            }
-        }
-        if(!isInList)
-        {
-            beeInfo[day].IDList.append(this->data[i].ID);
-            beeInfo[day].trajectoryCount.append(1);
-            IDNumber = beeInfo[day].IDList.size();
-        }
-        beeInfo[day].trajectoryCount[IDNumber]++;
-    }
 
     //show bee daily info
     for(int i = 0; i < beeInfo.size(); i++)
@@ -858,6 +814,9 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
         qDebug() << beeInfo[i].IDList;
         qDebug() << beeInfo[i].trajectoryCount;
     }
+
+    //plot chart
+    this->plotBeeInfo(this->data);
 
     //save daily info
     QDir outInfo("out/bee_info");
@@ -893,4 +852,29 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
 
 
+}
+
+void DataProcessWindow::on_test_pushButton_clicked()
+{
+    QString fileDir;
+    QString currentDir = QDir::currentPath();
+    fileDir = currentDir+"/matlab";
+    qDebug() << fileDir;
+
+
+    Engine *ep;
+    ep = engOpen("");
+    QString cmd = "cd "+fileDir;
+    engEvalString(ep, cmd.toStdString().c_str());
+    engEvalString(ep, "dailyInfo");
+//    mxArray *fileName;
+
+//    ep = engOpen("");
+//    fileName = mxCreateString(fileNameStr.toStdString().c_str());
+//    engPutVariable(ep, "fileName", fileName);
+    //memcpy((void *)mxGetPr(fileName), (void *)time, sizeof(time));
+    //        fprintf(stderr, "\nCan't start MATLAB engine\n");
+//        return EXIT_FAILURE;
+//    }
+//    fileName = mxCreateCharMatrixFromStrings_700();
 }

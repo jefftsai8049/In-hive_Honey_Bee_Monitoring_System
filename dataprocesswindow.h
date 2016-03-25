@@ -24,6 +24,8 @@
 //OpenCV
 #include <opencv.hpp>
 
+#include <engine.h>
+
 #include "whitelist.h"
 
 
@@ -86,6 +88,8 @@ private slots:
 
     void on_white_list_smoothing_pushButton_clicked();
 
+    void on_test_pushButton_clicked();
+
 private:
     Ui::DataProcessWindow *ui;
 
@@ -127,6 +131,8 @@ private:
     void getGroupBeePatternRation(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector< QVector<double> > &infoRatio);
 
     void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoCount);
+
+    void getDailyInfo(QVector<beeDailyInfo> &beeInfo);
 
     //testing...
     void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);
