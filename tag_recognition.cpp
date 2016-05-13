@@ -182,6 +182,7 @@ void tag_recognition::wordImage2DataHOG(cv::Mat &src)
     std::vector<float> descriptors;
     //winSize(64,128), blockSize(16,16), blockStride(8,8),cellSize(8,8), nbins(9)
     cv::HOGDescriptor hog(cv::Size(12,12),cv::Size(6,6),cv::Size(3,3),cv::Size(3,3),9);
+    //cv::HOGDescriptor hog(cv::Size(8,8),cv::Size(4,4),cv::Size(2,2),cv::Size(2,2),9);
     hog.compute(src,descriptors);
 
     //    qDebug() << descriptors.size();
@@ -229,24 +230,6 @@ int tag_recognition::wordRecognition(cv::Mat &src)
 int tag_recognition::wordMapping(const int &result)
 {
     QMap<int,int> map;
-    //    map.insert(0,'!');
-    //    map.insert(1,'A');
-    //    map.insert(2,'B');
-    //    map.insert(3,'C');
-    //    map.insert(4,'E');
-    //    map.insert(5,'F');
-    //    map.insert(6,'G');
-    //    map.insert(7,'H');
-    //    map.insert(8,'K');
-    //    map.insert(9,'L');
-    //    map.insert(10,'O');
-    //    map.insert(11,'P');
-    //    map.insert(12,'R');
-    //    map.insert(13,'S');
-    //    map.insert(14,'T');
-    //    map.insert(15,'U');
-    //    map.insert(16,'Y');
-    //    map.insert(17,'Z');
 
     map.insert(0,'A');
     map.insert(1,'B');

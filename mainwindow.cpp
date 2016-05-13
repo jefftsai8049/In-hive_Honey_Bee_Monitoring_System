@@ -377,7 +377,7 @@ std::vector<std::string> MainWindow::getVideoName(QVector<QStringList> list,std:
             folder = "/Camera_M/";
         else if(i == 2)
             folder = "/Camera_R/";
-        fileNames.push_back(path+folder+list[i][0].toStdString());
+        fileNames.push_back(path+folder+list[i][ 0].toStdString());
     }
     return fileNames;
 }
@@ -788,4 +788,9 @@ void MainWindow::on_erase__ten_pushButton_clicked()
         fileName = fileName.mid(2,fileName.length()-2);
         ui->videoName_textBrowser->insertPlainText(fileName);
     }
+}
+
+void MainWindow::on_show_text_checkBox_clicked()
+{
+    TT->setShowText(ui->show_text_checkBox->isChecked());
 }

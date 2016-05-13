@@ -103,6 +103,11 @@ void trajectory_tracking::setShowImage(const bool &status)
     showImage = status;
 }
 
+void trajectory_tracking::setShowText(const bool &status)
+{
+    showText = status;
+}
+
 void trajectory_tracking::setSVMModelFileName(const std::string &fileName)
 {
     this->SVMModelFileName = fileName;
@@ -282,7 +287,7 @@ void trajectory_tracking::run()
 #endif
 
 #ifndef DEBUG_TAG_RECOGNITION
-//#pragma omp parallel for
+        //#pragma omp parallel for
 #endif
         for (int j=0;j<circles.size();j++)
         {
@@ -336,8 +341,11 @@ void trajectory_tracking::run()
                 cv::Scalar color = cv::Scalar(255,255,255);
                 cv::circle( panoDrawCircle, center, radius, color, 1, 8, 0 );
 #ifndef DEBUG_TAG_RECOGNITION
-                cv::putText(panoDrawCircle,w1[i],cv::Point(circles[i][0]-15, circles[i][1]+40),cv::FONT_HERSHEY_DUPLEX,1,color);
-                cv::putText(panoDrawCircle,w2[i],cv::Point(circles[i][0]+5, circles[i][1]+40),cv::FONT_HERSHEY_DUPLEX,1,color);
+                if(showText)
+                {
+                    cv::putText(panoDrawCircle,w1[i],cv::Point(circles[i][0]-15, circles[i][1]+40),cv::FONT_HERSHEY_DUPLEX,1,color);
+                    cv::putText(panoDrawCircle,w2[i],cv::Point(circles[i][0]+5, circles[i][1]+40),cv::FONT_HERSHEY_DUPLEX,1,color);
+                }
 #endif
             }
             //            std::vector<std::vector<cv::Point> > path;

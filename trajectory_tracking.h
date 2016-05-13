@@ -49,6 +49,8 @@ public:
 
     void setShowImage(const bool &status);
 
+    void setShowText(const bool &status);
+
     void setSVMModelFileName(const std::string &fileName);
 
     void setPCAModelFileName(const std::string &fileName);
@@ -93,6 +95,8 @@ private:
     bool stopped;
 
     bool showImage = true;
+
+    bool showText = true;
 
     QTimer *saveClock;
 

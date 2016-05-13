@@ -126,6 +126,8 @@ private slots:
 
     void on_erase__ten_pushButton_clicked();
 
+    void on_show_text_checkBox_clicked();
+
 private:
     Ui::MainWindow *ui;
 
