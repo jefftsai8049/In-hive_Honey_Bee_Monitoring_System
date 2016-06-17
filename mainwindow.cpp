@@ -92,13 +92,6 @@ MainWindow::MainWindow(QWidget *parent) :
     else
         emit sendSystemLog(manulStitchModel.fileName()+" no found!");
 
-    //load SVM tag recognition model
-    QFile SVMModel("model/model_HOG_PCA_25_-2_0.984706.yaml");
-    if(SVMModel.exists())
-        TT->setSVMModelFileName(SVMModel.fileName().toStdString());
-    else
-        emit sendSystemLog(SVMModel.fileName()+" no found!");
-
     //load PCA model for tag image reduce dimensions
     QFile PCAModel("model/PCA_HOG_PCA_25_.txt");
     if(PCAModel.exists())
@@ -135,6 +128,19 @@ MainWindow::MainWindow(QWidget *parent) :
     //timer for record sensor data
     recordClock = new QTimer;
     connect(recordClock,SIGNAL(timeout()),this,SLOT(recordSensorData()));
+
+    //set text system
+    TT->setTextSystem(ui->text_system_comboBox->currentText());
+
+    //load SVM tag recognition model
+    SVMModel_SUTM.setFileName("model/model_HOG_PCA_25_-2_0.984706_SUTM.yaml");
+    SVMModel_MUTM.setFileName("model/model_HOG_PCA_25_-2_0.984706_MTUM.yaml");
+    SVMModel_Test.setFileName("model/model_HOG_PCA_25_-2_0.984706_Test.yaml");
+
+    if(SVMModel_SUTM.exists())
+        TT->setSVMModelFileName(SVMModel_SUTM.fileName().toStdString());
+    else
+        emit sendSystemLog(SVMModel_SUTM.fileName()+" no found!");
 
 }
 
@@ -398,7 +404,7 @@ void mouseCallBack(int event, int x, int y, int flag,void* userdata)
     else if (event == CV_EVENT_MBUTTONDOWN)
     {
         qDebug() << "fileSaved";
-        cv::FileStorage f("model\manual_stitching.xml",cv::FileStorage::WRITE);
+        cv::FileStorage f("model/manual_stitching.xml",cv::FileStorage::WRITE);
         f << "point" << originPoint;
         f.release();
 
@@ -793,4 +799,32 @@ void MainWindow::on_erase__ten_pushButton_clicked()
 void MainWindow::on_show_text_checkBox_clicked()
 {
     TT->setShowText(ui->show_text_checkBox->isChecked());
+}
+
+void MainWindow::on_text_system_comboBox_currentIndexChanged(const QString &arg1)
+{
+    TT->setTextSystem(arg1);
+    emit sendSystemLog("Change text system into "+arg1);
+
+    if(arg1 == "SUTM")
+    {
+        if(SVMModel_SUTM.exists())
+            TT->setSVMModelFileName(SVMModel_SUTM.fileName().toStdString());
+        else
+            emit sendSystemLog(SVMModel_SUTM.fileName()+" no found!");
+    }
+    else if(arg1 == "MUTM")
+    {
+        if(SVMModel_MUTM.exists())
+            TT->setSVMModelFileName(SVMModel_MUTM.fileName().toStdString());
+        else
+            emit sendSystemLog(SVMModel_MUTM.fileName()+" no found!");
+    }
+    else if(arg1 == "Test")
+    {
+        if(SVMModel_Test.exists())
+            TT->setSVMModelFileName(SVMModel_Test.fileName().toStdString());
+        else
+            emit sendSystemLog(SVMModel_Test.fileName()+" no found!");
+    }
 }

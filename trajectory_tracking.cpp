@@ -141,6 +141,11 @@ void trajectory_tracking::setPCAandHOG(const bool &PCAS, const bool &HOGS)
     TR->setPCAandHOG(PCAS,HOGS);
 }
 
+void trajectory_tracking::setTextSystem(const QString &textSys)
+{
+    TR->setTextSystem(textSys);
+}
+
 void trajectory_tracking::stopStitch()
 {
     this->stopped = true;

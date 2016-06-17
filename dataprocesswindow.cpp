@@ -43,6 +43,10 @@ void DataProcessWindow::on_data_preprocessing_pushButton_clicked()
     rawDataProcessing.waitForFinished();
     this->path.clear();
 
+
+
+
+
     //set next button enable
     ui->trajectory_classify_pushButton->setEnabled(true);
     ui->white_list_smoothing_pushButton->setEnabled(true);
@@ -83,6 +87,40 @@ void DataProcessWindow::setObjectTrackingParameters(const objectTrackingParamete
     OT->setPathSegmentSize(this->OTParams.segmentSize);
 }
 
+void DataProcessWindow::pseudoColor(const cv::Mat &src, cv::Mat &dst)
+{
+    cv::Mat srcGray = src.clone();
+    //cv::cvtColor(src,srcGray,CV_GRAY2BGR);
+    cv::Mat HSI;
+    HSI.create(srcGray.rows,srcGray.cols,CV_32FC3);
+    for(int i=0;i<srcGray.rows;i++)
+    {
+        for(int j=0;j<srcGray.cols;j++)
+        {
+            double val =srcGray.at<uchar>(i,j);
+            HSI.at<cv::Vec3f>(i,j)[0] = val/255.0*360.0;
+            HSI.at<cv::Vec3f>(i,j)[1] = 1;
+            HSI.at<cv::Vec3f>(i,j)[2] = 1;
+        }
+    }
+    //    //using HSI to convert gray to colcor image
+    //    cv::cvtColor(HSI,dst,cv::COLOR_HSV2BGR);
+    //    cv::Mat reference;
+    //    reference.create(100,600,CV_32FC3);
+    //    for(int m=0;m<reference.rows;m++)
+    //    {
+    //        for(int n=0;n<reference.cols;n++)
+    //        {
+    //            double val =(double)n/(double)reference.cols;
+    //            reference.at<cv::Vec3f>(m,n)[0] = val*360.0;
+    //            reference.at<cv::Vec3f>(m,n)[1] = 1;
+    //            reference.at<cv::Vec3f>(m,n)[2] = 1;
+    //        }
+    //    }
+    //    cv::Mat reference_dst;
+    //    cv::cvtColor(reference,reference_dst,cv::COLOR_HSV2RGB);
+}
+
 void DataProcessWindow::on_actionOpen_Raw_Data_triggered()
 {
     ui->data_preprocessing_pushButton->setEnabled(false);
@@ -119,10 +157,16 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     OT->tracjectoryClassify(this->data,this->OTParams);
 
     //group pattern count and ratio
+
     QVector<QStringList> infoID;
     infoID << this->controlWhiteList << this->experimentWhiteList;
     QVector< QVector<double> > infoRatio;
     this->getGroupBeePatternRation(this->data,infoID,infoRatio);
+
+
+
+
+
 
     for(int i = 0; i < infoID.size(); i++)
     {
@@ -194,6 +238,52 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
         out << "\n";
     }
     beeInfoFile.close();
+
+    QVector<beeDailyInfo> beeInfo;
+    this->getDailyInfo(beeInfo);
+
+    QFile motionPatternCountFile(outInfo.absolutePath()+"/"+"motion_pattern_count.csv");
+    motionPatternCountFile.open(QIODevice::ReadWrite);
+    QTextStream motionOut(&motionPatternCountFile);
+    for(int i = 0; i < beeInfo.size();i++)
+    {
+
+        motionOut << beeInfo[i].date << "\n";
+        for(int j = 0; j < beeInfo[i].IDList.size();j++)
+        {
+            motionOut << beeInfo[i].IDList[j] << ",";
+            for(int k = 0 ; k < beeInfo[i].motionPatternCount[j].size(); k++)
+            {
+                motionOut << beeInfo[i].motionPatternCount[j][k];
+                if(k != beeInfo[i].motionPatternCount[j].size()-1)
+                    motionOut << ",";
+            }
+            motionOut << "\n";
+        }
+    }
+    motionPatternCountFile.close();
+
+    //get trajectory distance
+
+    qDebug() << outInfo.absolutePath()+"/trajectory_distance.csv";
+    QFile file;
+    file.setFileName(outInfo.absolutePath()+"/trajectory_distance.csv");
+    file.open(QIODevice::WriteOnly);
+
+    for(int i = 0; i < this->data.size(); i++)
+    {
+        file.write(this->data[i].ID.toStdString().c_str());
+        file.write(",");
+        file.write(this->data[i].startTime.toString("yyyy-MM-dd-hh-mm-ss").toStdString().c_str());
+        file.write(",");
+        file.write(QString::number(this->data[i].getTrajectoryMovingDistance()).toStdString().c_str());
+        file.write(",");
+        file.write(QString::number(this->data[i].getTrajectoryMovingVelocity()).toStdString().c_str());
+
+
+        file.write("\n");
+    }
+    file.close();
 }
 
 void DataProcessWindow::on_actionObject_Tracking_triggered()
@@ -669,9 +759,10 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
 void DataProcessWindow::getDailyInfo(QVector<beeDailyInfo> &beeInfo)
 {
     beeInfo.clear();
-//    QVector<beeDailyInfo> beeInfo;
+    //    QVector<beeDailyInfo> beeInfo;
     for(int i = 0;i < this->data.size();i++)
     {
+        //check day in list or not
         bool isExist = 0;
         int day = 0;
         QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
@@ -692,7 +783,7 @@ void DataProcessWindow::getDailyInfo(QVector<beeDailyInfo> &beeInfo)
             isExist = 1;
             day = beeInfo.size()-1;
         }
-
+        //check ID in list or not
         bool isInList = 0;
         int IDNumber;
         for(int j = 0; j < beeInfo[day].IDList.size();j++)
@@ -703,12 +794,21 @@ void DataProcessWindow::getDailyInfo(QVector<beeDailyInfo> &beeInfo)
                 IDNumber = j;
                 break;
             }
+
         }
         if(!isInList)
         {
             beeInfo[day].IDList.append(this->data[i].ID);
-            beeInfo[day].trajectoryCount.append(1);
-            IDNumber = beeInfo[day].IDList.size();
+            beeInfo[day].trajectoryCount.append(0);
+            QVector<int> mpc(6);
+            beeInfo[day].motionPatternCount.append(mpc);
+            IDNumber = beeInfo[day].IDList.size()-1;
+        }
+        //qDebug() << this->data[i].ID << this->data[i].pattern.size() << this->data[i].pattern;
+        for(int k = 0;k < this->data[i].pattern.size();k++)
+        {
+            beeInfo[day].motionPatternCount[IDNumber][this->data[i].pattern[k]]++;
+            //qDebug() << this->data[i].pattern[k];
         }
         beeInfo[day].trajectoryCount[IDNumber]++;
     }
@@ -722,6 +822,34 @@ void DataProcessWindow::getTransitionMatrix(QVector<trackPro> &data, QStringList
 
     //    }
     //transition.create(PATTERN_TYPES,PATTERN_TYPES,CV_8UC1);
+}
+
+void DataProcessWindow::getDailyMotionPatternInfo(QVector<beeMotionPatternInfo> &dailyMotionInfo)
+{
+    //    dailyMotionInfo.clear();
+    //    for(int i = 0; i < this->data.size(); i++)
+    //    {
+    //        bool isExist = 0;
+    //        int day = 0;
+    //        QString beeDate = this->data[i].startTime.toString("yyyy-MM-dd");
+    //        for(int j = 0; j < dailyMotionInfo.size();j++)
+    //        {
+    //            if(beeDate == beeInfo[j].date)
+    //            {
+    //                isExist = 1;
+    //                day = j;
+    //                break;
+    //            }
+    //        }
+
+    //        for(int j = 0; j < dailyMotionInfo.size();j++)
+    //        {
+    //            if(this->data[i].startTime.toString("yyyy-MM-dd") == dailyMotionInfo[j].date )
+    //            {
+    //                break;
+    //            }
+    //        }
+    //    }
 }
 
 void DataProcessWindow::on_actionWhite_List_triggered()
@@ -852,29 +980,195 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
 
 
+
+
 }
 
 void DataProcessWindow::on_test_pushButton_clicked()
 {
-    QString fileDir;
-    QString currentDir = QDir::currentPath();
-    fileDir = currentDir+"/matlab";
-    qDebug() << fileDir;
+    //    QString fileDir;
+    //    QString currentDir = QDir::currentPath();
+    //    fileDir = currentDir+"/matlab";
+    //    qDebug() << fileDir;
 
 
-    Engine *ep;
-    ep = engOpen("");
-    QString cmd = "cd "+fileDir;
-    engEvalString(ep, cmd.toStdString().c_str());
-    engEvalString(ep, "dailyInfo");
-//    mxArray *fileName;
+    //    Engine *ep;
+    //    ep = engOpen("");
+    //    QString cmd = "cd "+fileDir;
+    //    engEvalString(ep, cmd.toStdString().c_str());
+    //    engEvalString(ep, "dailyInfo");
+    //    mxArray *fileName;
 
-//    ep = engOpen("");
-//    fileName = mxCreateString(fileNameStr.toStdString().c_str());
-//    engPutVariable(ep, "fileName", fileName);
+    //    ep = engOpen("");
+    //    fileName = mxCreateString(fileNameStr.toStdString().c_str());
+    //    engPutVariable(ep, "fileName", fileName);
     //memcpy((void *)mxGetPr(fileName), (void *)time, sizeof(time));
     //        fprintf(stderr, "\nCan't start MATLAB engine\n");
-//        return EXIT_FAILURE;
-//    }
-//    fileName = mxCreateCharMatrixFromStrings_700();
+    //        return EXIT_FAILURE;
+    //    }
+    //    fileName = mxCreateCharMatrixFromStrings_700();
+}
+
+void DataProcessWindow::on_distributed_area_pushButton_clicked()
+{
+    if(!data.isEmpty())
+    {
+
+        cv::Mat srcControl;
+        srcControl = srcControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
+        cv::Mat srcExperiment;
+        srcExperiment = srcExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
+        for(int i = 0;i < data.size();i++)
+        {
+            if(this->controlWhiteList.indexOf(data[i].ID.at(0)) > -1)
+            {
+                //qDebug() << "control "<< data[i].ID;
+                for(int j = 0;j < data[i].size; j++)
+                {
+                    if(srcControl.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
+                        srcControl.at<uchar>(data[i].position[j].y,data[i].position[j].x) += cVal;
+                }
+            }
+            else if(this->experimentWhiteList.indexOf(data[i].ID.at(0)) > -1)
+            {
+                //qDebug() << "experiment "<< data[i].ID;
+                for(int j = 0;j < data[i].size; j++)
+                {
+                    if(srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
+                        srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x)+= cVal;
+                }
+            }
+        }
+        //cv::normalize(srcControl,srcControl,0,255,cv::NORM_MINMAX);
+        cv::resize(srcControl,srcControl,cv::Size(srcControl.cols/4,srcControl.rows/4));
+        //cv::normalize(srcExperiment,srcExperiment,0,255,cv::NORM_MINMAX);
+        cv::resize(srcExperiment,srcExperiment,cv::Size(srcExperiment.cols/4,srcExperiment.rows/4));
+        //        cv::imshow("srcControl",srcControl);
+        //        cv::imshow("srcExperiment",srcExperiment);
+
+        cv::Mat dstControl,dstExperiment;
+        cv::applyColorMap(srcControl,dstControl,cv::COLORMAP_JET);
+        cv::applyColorMap(srcExperiment,dstExperiment,cv::COLORMAP_JET);
+        //pseudoColor(srcControl,dstControl);
+        //pseudoColor(srcExperiment,dstExperiment);
+
+        cv::imshow("dstControl",dstControl);
+        cv::imshow("dstExperiment",dstExperiment);
+
+        cv::imwrite("dstControl.jpg",dstControl);
+        cv::imwrite("dstExperiment.jpg",dstExperiment);
+    }
+}
+
+void DataProcessWindow::on_c_value_spinBox_valueChanged(int arg1)
+{
+    cVal = arg1;
+}
+
+void DataProcessWindow::on_motion_pattern_filterpushButton_clicked()
+{
+    QFile inFile;
+    inFile.setFileName("out/bee_info/motion_pattern_count.csv");
+    inFile.open(QIODevice::ReadOnly);
+
+    if(!inFile.exists())
+    {
+        qDebug() <<"GG";
+        return;
+    }
+
+    QFile outFile;
+    outFile.setFileName("out/bee_info/motion_pattern_count_filter.csv");
+    outFile.open(QIODevice::WriteOnly);
+    QVector<double> sumList;
+    sumList.clear();
+    QVector<double> SRList;
+    SRList.clear();
+    QStringList strList;
+    strList.clear();
+
+    int last = 2;
+    while(!inFile.atEnd()||last==1)
+    {
+        QString str = inFile.readLine();
+        QStringList data = str.trimmed().split(',');
+        if(data.size() > 1)
+        {
+
+            data.removeFirst();
+            QVector<int> val(data.size());
+            for(int i = 0;i < val.size();i++)
+            {
+                val[i] = data[i].toInt();
+            }
+
+            //sum
+            double sum = 0;
+            for(int i = 0; i < val.size();i++)
+            {
+                sum+=(double)val[i]/12.0/60.0/60.0;
+            }
+
+            //static motion ratio
+            double SR = (double)val[0]/sum;
+            sumList.append(sum);
+            SRList.append(SR);
+            strList.append(str);
+
+        }
+        else
+        {
+
+            QVectorIterator<double> isumList(sumList);
+            double sum = 0;
+            while(isumList.hasNext()){
+                sum += isumList.next();
+            }
+
+            double mean = sum/ (double)sumList.count();
+            double var = 0;
+            for(int i = 0;i < sumList.count();i++)
+            {
+                var += (mean-sumList[i])*(mean-sumList[i]);
+
+            }
+            var /= (double)sumList.count();
+
+            for(int i = 0;i < sumList.count();i++)
+            {
+                bool c1 = (sumList[i] > mean+2*var);
+                bool c2 = (sumList[i] < mean-2*var);
+                if(c1+c2)
+                {
+                    qDebug() << sumList[i] << mean+2*var << mean-2*var;
+                    sumList.remove(i);
+                    SRList.remove(i);
+                    strList.removeAt(i);
+                    i--;
+                }
+            }
+            qDebug() << strList.count();
+            for(int i = 0;i < strList.count();i++)
+            {
+                outFile.write(strList[i].toStdString().c_str());
+            }
+            outFile.write(str.toStdString().c_str());
+            sumList.clear();
+            SRList.clear();
+            strList.clear();
+
+        }
+        if(last == 1)
+        {
+            break;
+            qDebug() << str << str.size();
+        }
+        if(inFile.atEnd())
+        {
+            last = 1;
+        }
+
+    }
+    inFile.close();
+    outFile.close();
 }

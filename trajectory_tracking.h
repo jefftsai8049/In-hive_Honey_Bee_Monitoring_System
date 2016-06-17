@@ -61,6 +61,8 @@ public:
 
     void setPCAandHOG(const bool &PCAS,const bool &HOGS);
 
+    void setTextSystem(const QString &textSys);
+
     void stopStitch();
 
 signals:

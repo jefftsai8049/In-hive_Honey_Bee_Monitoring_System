@@ -49,6 +49,8 @@ public:
 
     void setPCAandHOG(const bool &PCAS,const bool &HOGS);
 
+    void setTextSystem(const QString &textSys);
+
     int binaryThreshold;
 signals:
 
@@ -103,6 +105,15 @@ private:
 
     int contourParam2;
 
+    //Text System
+
+    QString textSys;
+
+    QMap<int,int> SUTM_map;
+
+    QMap<int,int> MUTM_map;
+
+    QMap<int,int> Test_map;
 };
 
 #endif // TAG_RECOGNITION_H

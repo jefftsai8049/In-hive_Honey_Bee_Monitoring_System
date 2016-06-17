@@ -30,6 +30,24 @@ cv::Mat trackPro::getCriticalPointPlot(const cv::Mat &src)
     return dst;
 }
 
+double trackPro::getTrajectoryMovingDistance()
+{
+//    QVector<cv::Point> position;
+    double distance = 0;
+    for(int i = 0; i < position.size()-1;i++)
+    {
+        distance += sqrt(pow(position[i].x-position[i+1].x,2)+pow(position[i].y-position[i+1].y,2));
+    }
+    return distance;
+}
+
+double trackPro::getTrajectoryMovingVelocity()
+{
+    qint64 timeDelta = this->startTime.msecsTo(this->endTime);
+    double velocity = this->getTrajectoryMovingDistance()/((double)timeDelta/1000.0);
+    return velocity;
+}
+
 //cv::Mat trackPro::getPatternCountMat()
 //{
 //    cv::Mat count(1,PATTERN_TYPES,CV_32SC1);
@@ -383,26 +401,47 @@ QString object_tracking::voting(track path)
             }
         }
     }
+#ifdef DEBUG_VOTING
+    int w1Sum = 0;
+    int w2Sum = 0;
+    for(int i = 0;i < w1_word.size();i++)
+    {
+        w1Sum += w1_count[i];
+    }
+    for(int i = 0;i < w2_word.size();i++)
+    {
+        w2Sum += w2_count[i];
+    }
 
+    qDebug() << "w1 sum" << w1Sum << "w2 sum" << w2Sum;
+    for(int i = 0;i < w1_word.size();i++)
+    {
+        qDebug() << "w1" << w1_word[i] << (float)w1_count[i]/(float)w1Sum;
+    }
+    for(int i = 0;i < w2_word.size();i++)
+    {
+        qDebug() << "w2" << w2_word[i] << (float)w2_count[i]/(float)w2Sum;
+    }
+#endif
     char word1_final,word2_final;;
 
     for(int m = 0; m < w1_word.size(); m++)
     {
-        if(w1_word[m] != '!')
-        {
-            word1_final = w1_word[m];
-            break;
-        }
+        //        if(w1_word[m] != '!')
+        //        {
+        word1_final = w1_word[m];
+        break;
+        //        }
 
     }
 
     for(int m = 0; m < w2_word.size(); m++)
     {
-        if(w2_word[m] != '!')
-        {
-            word2_final = w2_word[m];
-            break;
-        }
+        //        if(w2_word[m] != '!')
+        //        {
+        word2_final = w2_word[m];
+        break;
+        //        }
 
     }
     QString result;
@@ -551,7 +590,8 @@ int object_tracking::minTimeStep(const std::vector<QDateTime> &time)
 
 cv::Point object_tracking::mean(const QVector<cv::Point> &motion)
 {
-    float x,y;
+    float x = 0;
+    float y = 0;
     for(int i = 0; i < motion.size(); i++)
     {
         x+=(float)motion.at(i).x/(float)motion.size();
@@ -653,12 +693,15 @@ void object_tracking::rawDataPreprocessing(const std::vector<track> *path, QVect
     {
         trackPro TP;
         TP.ID = this->voting(path->at(i));
-        TP.startTime = path->at(i).time[0];
-        TP.endTime = path->at(i).time[path->at(i).time.size()-1];
-        TP.position = QVector<cv::Point>::fromStdVector(path->at(i).position);
-        //TP.position = this->interpolation(path->at(i).position,path->at(i).time);
-        TP.size = TP.position.size();
-        TPVector->append(TP);
+        if(TP.ID.at(0)!='!' && TP.ID.at(1)!='!')
+        {
+            TP.startTime = path->at(i).time[0];
+            TP.endTime = path->at(i).time[path->at(i).time.size()-1];
+            //TP.position = QVector<cv::Point>::fromStdVector(path->at(i).position);
+            TP.position = this->interpolation(path->at(i).position,path->at(i).time);
+            TP.size = TP.position.size();
+            TPVector->append(TP);
+        }
         emit sendProgress((i+1)*100/path->size());
     }
 
@@ -746,7 +789,7 @@ void object_tracking::tracjectoryClassify(QVector<trackPro> &path, const objectT
     //check all path
     for(int i = 0; i < path.size(); i++)
     {
-        QVector<char> patternSequence;
+        QVector<int> patternSequence;
         //check path position size is bigger than  SHORTEST_SAMPLE_SIZE or not
         if(path.at(i).size > this->segmentSize-1)
         {
@@ -765,13 +808,13 @@ void object_tracking::tracjectoryClassify(QVector<trackPro> &path, const objectT
                 if(var[0] < params.thresholdNoMove && var[1] < params.thresholdNoMove && abs(var[2]) < params.thresholdNoMove)
                 {
                     patternSequence.append(NO_MOVE);
-                    //drawPathPattern(motion);
                 }
                 //LOITERING
                 else if(var[0] < params.thresholdLoitering && var[1] < params.thresholdLoitering && abs(var[2]) < params.thresholdLoitering)
                 {
                     patternSequence.append(LOITERING);
-                    //drawPathPattern(motion);
+
+
                 }
                 else
                 {
@@ -787,9 +830,11 @@ void object_tracking::tracjectoryClassify(QVector<trackPro> &path, const objectT
                 }
 #ifdef SHOW_PATTERN_NAME
                 qDebug() << tracjectoryName(patternSequence.at(patternSequence.size()-1));
+                drawPathPattern(motion);
 #endif
             }
         }
+        //qDebug() << patternSequence;
         path[i].pattern = patternSequence;
         emit sendProgress((i+1)*100.0/path.size());
     }

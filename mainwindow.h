@@ -128,6 +128,8 @@ private slots:
 
     void on_show_text_checkBox_clicked();
 
+    void on_text_system_comboBox_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
 
@@ -161,6 +163,13 @@ private:
     QTimer *recordClock;
 
     QSerialPort *port;
+
+    QFile SVMModel_SUTM;
+
+    QFile SVMModel_MUTM;
+
+    QFile SVMModel_Test;
+
 
 signals:
     void sendSystemLog(const QString& msg);

@@ -13,10 +13,12 @@ TEMPLATE = app
 
 DEFINES += HAVE_OPENCV \
 #        += DEBUG_TAG_RECOGNITION \
+#        DEBUG_VOTING \
 #        += SAVE_TAG_IMAGE \
 #        += DEBUG_OBJECT_TRACKING \
         NO_OCL \
 #        += SHOW_PATTERN_NAME
+
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -58,7 +60,7 @@ win32 {
     INCLUDEPATH += C:\\opencv300_vc2013\\include \
                    C:\\opencv300_vc2013\\include\\opencv \
                    C:\\opencv300_vc2013\\include\\opencv2 \
-                   "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\include"  \
+#                   "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\include"  \
 
 
     LIBS += -LC:\\opencv300_vc2013\\x64\\lib \
@@ -66,8 +68,8 @@ win32 {
             -lopencv_ts300 \
             -lopencv_world300d \
             -lopencv_ts300d  \
-            "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\lib\\win64\\microsoft\\libeng.lib"  \
-            "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\lib\\win64\\microsoft\\libmx.lib"
+#            "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\lib\\win64\\microsoft\\libeng.lib"  \
+#            "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\lib\\win64\\microsoft\\libmx.lib"
 
 }
 

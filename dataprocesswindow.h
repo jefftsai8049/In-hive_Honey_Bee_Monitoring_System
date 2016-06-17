@@ -3,6 +3,10 @@
 
 #define BEE_TRACK_COUNT 100
 
+//Parameters
+#define IMAGE_SIZE_X 1200
+#define IMAGE_SIZE_Y 1600
+
 //QT LIB
 #include <QMainWindow>
 #include <QStringList>
@@ -24,9 +28,11 @@
 //OpenCV
 #include <opencv.hpp>
 
-#include <engine.h>
+//#include <engine.h>
 
 #include "whitelist.h"
+
+#include "math.h"
 
 
 struct weatherInfo
@@ -44,6 +50,15 @@ struct beeDailyInfo
     QString date;
     QStringList IDList;
     QVector<int> trajectoryCount;
+    QVector< QVector<int> > motionPatternCount;
+};
+
+struct beeMotionPatternInfo
+{
+    QString date;
+    QStringList IDList;
+    QVector<int> trajectoryCount;
+    QVector< QVector<int> > motionPatternCount;
 };
 
 namespace Ui {
@@ -74,6 +89,8 @@ private slots:
 
     void setObjectTrackingParameters(const objectTrackingParameters &params);
 
+    void pseudoColor(const cv::Mat &src,cv::Mat &dst);
+
     void on_actionOpen_Processed_Data_triggered();
 
     void on_trajectory_classify_pushButton_clicked();
@@ -89,6 +106,12 @@ private slots:
     void on_white_list_smoothing_pushButton_clicked();
 
     void on_test_pushButton_clicked();
+
+    void on_distributed_area_pushButton_clicked();
+
+    void on_c_value_spinBox_valueChanged(int arg1);
+
+    void on_motion_pattern_filterpushButton_clicked();
 
 private:
     Ui::DataProcessWindow *ui;
@@ -108,6 +131,8 @@ private:
     QStringList controlWhiteList;
 
     QStringList experimentWhiteList;
+
+    int cVal = 1;
 
     void loadWeatherData(const QStringList &fileNames,QVector<weatherInfo> &weatherData);
 
@@ -136,6 +161,8 @@ private:
 
     //testing...
     void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);
+
+    void getDailyMotionPatternInfo(QVector<beeMotionPatternInfo> &dailyMotionInfo);
 
 signals:
     void sendSystemLog(const QString &log);

@@ -2,7 +2,62 @@
 
 tag_recognition::tag_recognition(QObject *parent) : QObject(parent)
 {
+    //for SUTM
+    SUTM_map.insert(0,'A');
+    SUTM_map.insert(1,'B');
+    SUTM_map.insert(2,'C');
+    SUTM_map.insert(3,'E');
+    SUTM_map.insert(4,'F');
+    SUTM_map.insert(5,'G');
+    SUTM_map.insert(6,'H');
+    SUTM_map.insert(7,'K');
+    SUTM_map.insert(8,'L');
+    SUTM_map.insert(9,'O');
+    SUTM_map.insert(10,'P');
+    SUTM_map.insert(11,'R');
+    SUTM_map.insert(12,'S');
+    SUTM_map.insert(13,'T');
+    SUTM_map.insert(14,'U');
+    SUTM_map.insert(15,'Y');
+    SUTM_map.insert(16,'Z');
 
+    //for MUTM
+    MUTM_map.insert(0,'A');
+    MUTM_map.insert(1,'B');
+    MUTM_map.insert(2,'C');
+    MUTM_map.insert(3,'E');
+    MUTM_map.insert(4,'G');
+    MUTM_map.insert(5,'H');
+    MUTM_map.insert(6,'K');
+    MUTM_map.insert(7,'L');
+    MUTM_map.insert(8,'M');
+    MUTM_map.insert(9,'N');
+    MUTM_map.insert(10,'O');
+    MUTM_map.insert(11,'R');
+    MUTM_map.insert(12,'S');
+    MUTM_map.insert(13,'T');
+    MUTM_map.insert(14,'U');
+    MUTM_map.insert(15,'Y');
+    MUTM_map.insert(16,'Z');
+
+    //for Test
+    Test_map.insert(0,'A');
+    Test_map.insert(1,'B');
+    Test_map.insert(2,'C');
+    Test_map.insert(3,'E');
+    Test_map.insert(4,'H');
+    Test_map.insert(5,'K');
+    Test_map.insert(6,'L');
+    Test_map.insert(7,'M');
+    Test_map.insert(8,'N');
+    Test_map.insert(9,'O');
+    Test_map.insert(10,'R');
+    Test_map.insert(11,'S');
+    Test_map.insert(12,'T');
+    Test_map.insert(13,'U');
+    Test_map.insert(14,'V');
+    Test_map.insert(15,'W');
+    Test_map.insert(16,'Z');
 }
 
 tag_recognition::~tag_recognition()
@@ -104,22 +159,17 @@ void tag_recognition::tagImgProc(cv::Mat src, cv::Mat &word1, cv::Mat &word2)
         return;
     }
 
-
-    //    qDebug() << "sort the blobs again by sizes";
     //sort the blobs again by sizes
     this->sortblobsSize(blobs);
 
-    //    qDebug() << "find blobs center";
     //find blobs center
     std::vector<cv::Point2f> blobCenter;
     this->findBlobCenter(blobs,blobCenter);
 
-    //    qDebug() << "find angle";
     //find angle
     cv::Point2f imgCenter;
     float angle = this->findRotateAngle(blobCenter,imgCenter);
 
-    //    qDebug() << "rotate image";
     //rotate image
     cv::Mat srcNoCircle;
     src.copyTo(srcNoCircle,circleRingMask);
@@ -132,19 +182,16 @@ void tag_recognition::tagImgProc(cv::Mat src, cv::Mat &word1, cv::Mat &word2)
     cv::imwrite("tag/rotate.bmp",srcNoCircle);
 #endif
 
-    //    qDebug() << "erase dot blob";
     //erase dot blob
     blobs.erase(blobs.begin());
     cv::Mat wordsMask = cv::Mat::zeros(srcBinaryZeroOne.rows,srcBinaryZeroOne.cols,CV_8UC1);
     this->drawBlobMask(wordsMask,blobs);
     cv::warpAffine(wordsMask,wordsMask,rotateInfo,cv::Size(src.rows,src.cols),cv::INTER_LINEAR,cv::BORDER_CONSTANT,cv::Scalar(0));
 
-    //    qDebug() << "copy with mask";
     //copy with mask
     cv::Mat rawDst(src.rows,src.cols,CV_8UC1,cv::Scalar::all(255));
     srcNoCircle.copyTo(rawDst,wordsMask);
 
-    //    qDebug() << "cut word";
     //cut word
     this->cutWords(wordsMask,rawDst,word1,word2);
 
@@ -229,27 +276,15 @@ int tag_recognition::wordRecognition(cv::Mat &src)
 
 int tag_recognition::wordMapping(const int &result)
 {
-    QMap<int,int> map;
 
-    map.insert(0,'A');
-    map.insert(1,'B');
-    map.insert(2,'C');
-    map.insert(3,'E');
-    map.insert(4,'F');
-    map.insert(5,'G');
-    map.insert(6,'H');
-    map.insert(7,'K');
-    map.insert(8,'L');
-    map.insert(9,'O');
-    map.insert(10,'P');
-    map.insert(11,'R');
-    map.insert(12,'S');
-    map.insert(13,'T');
-    map.insert(14,'U');
-    map.insert(15,'Y');
-    map.insert(16,'Z');
-
-    return map[result];
+    if(textSys == "SUTM")
+        return SUTM_map[result];
+    else if(textSys == "MUTM")
+        return MUTM_map[result];
+    else if(textSys == "Test")
+        return Test_map[result];
+    else
+        return SUTM_map[result];
 
 }
 
@@ -372,6 +407,11 @@ void tag_recognition::setPCAandHOG(const bool &PCAS, const bool &HOGS)
 {
     this->HOGStatus = HOGS;
     this->PCAStatus = PCAS;
+}
+
+void tag_recognition::setTextSystem(const QString &textSys)
+{
+    this->textSys = textSys;
 }
 
 void tag_recognition::findBlobs(const cv::Mat &binary,std::vector<std::vector<cv::Point2f> > &blobs)

@@ -70,13 +70,16 @@ struct trackPro
     QDateTime endTime;
     int size;
     QVector<cv::Point> position;
-    QVector<char> pattern;
+    QVector<int> pattern;
 
     QVector<int> criticalPointIndex;
 
     QVector<double> getPatternCount();
     cv::Mat getTrajectoryPlot(const cv::Mat &src);
     cv::Mat getCriticalPointPlot(const cv::Mat &src);
+
+    double getTrajectoryMovingDistance();
+    double getTrajectoryMovingVelocity();
 };
 
 
