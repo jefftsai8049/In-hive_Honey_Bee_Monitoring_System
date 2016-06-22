@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_4">
      <attribute name="title">
@@ -711,6 +711,7 @@
     <addaction name="actionLoad_Stitching_Image"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_Raw_Video_File"/>
+    <addaction name="actionRecord_Process_Procedure"/>
    </widget>
    <widget class="QMenu" name="menuSet">
     <property name="title">
@@ -758,6 +759,9 @@
    </property>
   </action>
   <action name="actionLoad_Stitching_Image">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Load Stitching Image</string>
    </property>
@@ -807,6 +811,14 @@
   <action name="actionStart_Analysis_Data">
    <property name="text">
     <string>Start Analysis Data</string>
+   </property>
+  </action>
+  <action name="actionRecord_Process_Procedure">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Record Process Procedure</string>
    </property>
   </action>
  </widget>

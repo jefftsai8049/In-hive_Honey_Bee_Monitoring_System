@@ -65,6 +65,10 @@ public:
 
     void stopStitch();
 
+    void initVideoRecord(const QString &fileName);
+
+    void finishVideoRecord();
+
 signals:
 
     void finish();
@@ -93,6 +97,11 @@ private:
 
     std::vector<cv::Mat> frame;
 
+    cv::VideoWriter *videoOut;
+
+    bool isRecord = 0;
+
+    bool isRecordStart = 1;
 
     bool stopped;
 
@@ -125,6 +134,9 @@ private:
     std::string SVMModelFileName;
 
     std::string PCAModelFileName;
+
+
+    QString recordFileName;
 
 
     void run();

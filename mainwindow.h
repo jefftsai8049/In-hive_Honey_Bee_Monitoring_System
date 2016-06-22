@@ -130,6 +130,8 @@ private slots:
 
     void on_text_system_comboBox_currentIndexChanged(const QString &arg1);
 
+    void on_actionRecord_Process_Procedure_triggered();
+
 private:
     Ui::MainWindow *ui;
 
@@ -142,6 +144,7 @@ private:
     std::vector<std::string> getVideoName(QVector<QStringList> list, std::string path);
 
     DataProcessWindow *DPW;
+
 
 
     int stitchMode = 0;//Manual

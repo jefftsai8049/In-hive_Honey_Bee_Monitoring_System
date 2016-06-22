@@ -25,8 +25,7 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     OTS->requestObjectTrackingParameters();
     OT->setPathSegmentSize(this->OTParams.segmentSize);
 
-    SMUTM << "A" << "B" << "C" << "E" << "F" << "G" << "H" << "K" << "L" << "O" << "P" << "R"
-          << "S" << "T" << "U" << "Y" << "Z";
+    SMUTM << "A" << "B" << "C" << "E" << "F" << "G" << "H" << "K" << "L" << "O" << "P" << "R" << "S" << "T" << "U" << "Y" << "Z";
 
 }
 
@@ -163,11 +162,6 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     QVector< QVector<double> > infoRatio;
     this->getGroupBeePatternRation(this->data,infoID,infoRatio);
 
-
-
-
-
-
     for(int i = 0; i < infoID.size(); i++)
     {
         qDebug() << infoID[i] << infoRatio[i];
@@ -198,7 +192,7 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     PCA_2D = new cv::PCA(PCAData,cv::Mat(),cv::PCA::DATA_AS_ROW,dims);
     PCAData = PCA_2D->project(PCAData);
     cv::normalize(PCAData,PCAData,0,1,cv::NORM_MINMAX);
-    qDebug() << PCA_2D->eigenvalues.cols << PCA_2D->eigenvalues.rows;
+    //qDebug() << PCA_2D->eigenvalues.cols << PCA_2D->eigenvalues.rows;
 
     QDir outInfo("out/bee_info");
     if(!outInfo.exists())
@@ -229,7 +223,7 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 
     for(int i = 0; i < individualInfoRatio.size(); i++)
     {
-        qDebug() << individualInfoID[i] << individualInfoRatio[i];
+        //qDebug() << individualInfoID[i] << individualInfoRatio[i];
         out << individualInfoID[i] << ",";
         for(int j = 0; j < PATTERN_TYPES; j++)
         {
@@ -284,6 +278,9 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
         file.write("\n");
     }
     file.close();
+
+    this->outBeeBehaviorInfo(this->data);
+
 }
 
 void DataProcessWindow::on_actionObject_Tracking_triggered()
@@ -852,6 +849,110 @@ void DataProcessWindow::getDailyMotionPatternInfo(QVector<beeMotionPatternInfo> 
     //    }
 }
 
+void DataProcessWindow::outBeeBehaviorInfo(QVector<trackPro> &data)
+{
+    QDir outInfo("out/bee_info");
+    if(!outInfo.exists())
+    {
+        outInfo.cdUp();
+        outInfo.mkdir("bee_info");
+        outInfo.cd("bee_info");
+    }
+    QFile beeBehaviorFile(outInfo.absolutePath()+"/"+"individual_behavior.csv");
+    beeBehaviorFile.open(QIODevice::ReadWrite);
+
+    QTextStream out(&beeBehaviorFile);
+
+    QStringList beeIDList;
+    QVector< QVector<double> > beePatternRatio;
+    this->getIndividualBeePatternRatio(data,beeIDList,beePatternRatio);
+    QVector< QVector<double> > beeBehavior;
+    for(int i = 0; i < beeIDList.size(); i++)
+    {
+        QVector<double> behavior(13);
+        for(int j = 0; j < 6; j++)
+        {
+            behavior[j] = beePatternRatio[i][j];
+
+        }
+        beeBehavior.append(behavior);
+    }
+
+    for(int i = 0; i < data.size();i++)
+    {
+        int ID = beeIDList.indexOf(data[i].ID);
+        if(ID > -1)
+        {
+
+            //trajectory count
+            beeBehavior[ID][12]++;
+            //velocity
+            beeBehavior[ID][6] += data[i].getTrajectoryMovingVelocity();
+            //distance
+            beeBehavior[ID][7] += data[i].getTrajectoryMovingDistance();
+            //static
+            beeBehavior[ID][8] += data[i].getStaticTime();
+            //loitering
+            beeBehavior[ID][9] += data[i].getLoiteringTime();
+            //moving
+            beeBehavior[ID][10] += data[i].getMovingTime();
+            //time
+            beeBehavior[ID][11] += data[i].getDetectedTime();
+        }
+        else
+        {
+            qDebug() << data[i].ID;
+        }
+    }
+
+    for(int i = 0; i < beeBehavior.size(); i++)
+    {
+        //velocity
+        beeBehavior[i][6] /= beeBehavior[i][12];
+        //distance
+        beeBehavior[i][7] /= beeBehavior[i][12];
+        //static
+        beeBehavior[i][8] /= beeBehavior[i][12];
+        //loitering
+        beeBehavior[i][9] /= beeBehavior[i][12];
+        //moving
+        beeBehavior[i][10] /= beeBehavior[i][12];
+        //time
+        beeBehavior[i][11] /= beeBehavior[i][12];
+    }
+
+    out << "ID,Group,MotionRatioStatic,MotionRatioLoitering,MotionRatioMovingForward,MotionRatioMovingCW,MotionRatioMovingCCW,Waggle,"
+        << "Velocity,Distance,AvgLoiteringTime,AvgStaticTime,AvgMovingTime,DetectedTime,TrajectoryCount";
+    out << "\n";
+
+    for(int i = 0; i < beeIDList.size(); i++)
+    {
+        out << beeIDList[i] << ",";
+        int group = controlWhiteList.indexOf(QString(beeIDList[i][0]));
+        if(group > -1)
+            out << 0 << ",";
+        else
+        {
+            if(group = experimentWhiteList.indexOf(QString(beeIDList[i][0])) >-1)
+                out << 1 << ",";
+            else
+
+                out << -1 << ",";
+        }
+        for(int j = 0; j < beeBehavior[i].size();j++)
+        {
+            out << beeBehavior[i][j];
+            if(j!=beeBehavior[i].size()-1)
+                out << ",";
+        }
+        if(i!=beeIDList.size()-1)
+            out << "\n";
+    }
+
+    beeBehaviorFile.close();
+
+}
+
 void DataProcessWindow::on_actionWhite_List_triggered()
 {
     WL->show();
@@ -883,6 +984,7 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     //white list filter
     emit sendSystemLog("before white list filter : "+QString::number(this->data.size()));
     QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
+    qDebug() << whiteList;
     OT->tracjectoryWhiteList(this->data,whiteList);
     emit sendSystemLog("after white list filter : "+QString::number(this->data.size()));
 
@@ -1013,50 +1115,77 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
 {
     if(!data.isEmpty())
     {
-
         cv::Mat srcControl;
         srcControl = srcControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
         cv::Mat srcExperiment;
         srcExperiment = srcExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
-        for(int i = 0;i < data.size();i++)
+
+        double controlCount = 0;
+        double experimentCount = 0;
+
+        for(int i = 0;i < this->data.size();i++)
         {
-            if(this->controlWhiteList.indexOf(data[i].ID.at(0)) > -1)
+            //qDebug() << this->data[i].ID << this->data[i].position.size();
+            if(this->controlWhiteList.indexOf(this->data[i].ID.at(0)) > -1)
             {
                 //qDebug() << "control "<< data[i].ID;
-                for(int j = 0;j < data[i].size; j++)
+                for(int j = 0;j < this->data[i].position.size(); j++)
                 {
-                    if(srcControl.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
-                        srcControl.at<uchar>(data[i].position[j].y,data[i].position[j].x) += cVal;
+                    if(this->data[i].position[j].x >= 3600 ||this->data[i].position[j].y >= 1600)
+                    {
+                        //qDebug() << j<< this->data[i].position[j].x << this->data[i].position[j].y;
+
+                    }
+                    else
+                    {
+                        controlCount++;
+                        //                        if(srcControl.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
+                        srcControl.at<uchar>(this->data[i].position[j]) += cVal;
+                    }
                 }
             }
-            else if(this->experimentWhiteList.indexOf(data[i].ID.at(0)) > -1)
+            else if(this->experimentWhiteList.indexOf(this->data[i].ID.at(0)) > -1)
             {
                 //qDebug() << "experiment "<< data[i].ID;
-                for(int j = 0;j < data[i].size; j++)
+                for(int j = 0;j < this->data[i].position.size(); j++)
                 {
-                    if(srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
-                        srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x)+= cVal;
+                    if(this->data[i].position[j].x >= 3600 ||this->data[i].position[j].y >= 1600)
+                    {
+                        //qDebug() << j << this->data[i].position[j].x << this->data[i].position[j].y;
+                    }
+                    else
+                    {
+                        experimentCount++;
+                        //                        if(srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
+                        srcExperiment.at<uchar>(this->data[i].position[j])+= cVal;
+                    }
                 }
             }
         }
-        //cv::normalize(srcControl,srcControl,0,255,cv::NORM_MINMAX);
-        cv::resize(srcControl,srcControl,cv::Size(srcControl.cols/4,srcControl.rows/4));
-        //cv::normalize(srcExperiment,srcExperiment,0,255,cv::NORM_MINMAX);
-        cv::resize(srcExperiment,srcExperiment,cv::Size(srcExperiment.cols/4,srcExperiment.rows/4));
-        //        cv::imshow("srcControl",srcControl);
-        //        cv::imshow("srcExperiment",srcExperiment);
+        //        //        cv::normalize(srcControl,srcControl,0,255,cv::NORM_MINMAX);
+        cv::resize(srcControl,srcControl,cv::Size(srcControl.cols/2,srcControl.rows/2));
+        //        //        cv::normalize(srcExperiment,srcExperiment,0,255,cv::NORM_MINMAX);
+        cv::resize(srcExperiment,srcExperiment,cv::Size(srcExperiment.cols/2,srcExperiment.rows/2));
+
 
         cv::Mat dstControl,dstExperiment;
         cv::applyColorMap(srcControl,dstControl,cv::COLORMAP_JET);
         cv::applyColorMap(srcExperiment,dstExperiment,cv::COLORMAP_JET);
-        //pseudoColor(srcControl,dstControl);
-        //pseudoColor(srcExperiment,dstExperiment);
 
         cv::imshow("dstControl",dstControl);
         cv::imshow("dstExperiment",dstExperiment);
-
-        cv::imwrite("dstControl.jpg",dstControl);
-        cv::imwrite("dstExperiment.jpg",dstExperiment);
+        QDir outInfo("out/bee_info");
+        if(!outInfo.exists())
+        {
+            outInfo.cdUp();
+            outInfo.mkdir("bee_info");
+            outInfo.cd("bee_info");
+        }
+        cv::String dstName;
+        dstName = (outInfo.absolutePath()+"/dstControl.jpg").toStdString();
+        cv::imwrite(dstName,dstControl);
+        dstName = (outInfo.absolutePath()+"/dstExperiment.jpg").toStdString();
+        cv::imwrite(dstName,dstExperiment);
     }
 }
 

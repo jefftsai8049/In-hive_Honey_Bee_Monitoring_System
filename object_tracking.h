@@ -18,7 +18,7 @@
 
 
 #define REMAIN_SIZE 20
-#define FORGET_TRACKING_TIME 10
+#define FORGET_TRACKING_TIME 20
 #define SHORTEST_SAMPLE_SIZE 5
 #define MIN_FPS 8.0
 #define PATTERN_TYPES 9
@@ -80,6 +80,10 @@ struct trackPro
 
     double getTrajectoryMovingDistance();
     double getTrajectoryMovingVelocity();
+    double getStaticTime();
+    double getLoiteringTime();
+    double getMovingTime();
+    double getDetectedTime();
 };
 
 

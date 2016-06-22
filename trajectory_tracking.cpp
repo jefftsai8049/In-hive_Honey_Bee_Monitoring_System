@@ -151,6 +151,27 @@ void trajectory_tracking::stopStitch()
     this->stopped = true;
 }
 
+void trajectory_tracking::initVideoRecord(const QString &fileName)
+{
+    qDebug() << "open video writer";
+//    if(this->videoOut == NULL)
+//    {
+//
+//        this->videoOut = new cv::VideoWriter();
+//    }
+    recordFileName = fileName;
+    this->isRecord = true;
+}
+
+void trajectory_tracking::finishVideoRecord()
+{
+    qDebug() << "close video writer";
+    this->isRecord = false;
+    cv::waitKey(30);
+    this->videoOut->release();
+    this->isRecordStart = 1;
+}
+
 void trajectory_tracking::receiveSystemLog(const QString &log)
 {
     emit sendSystemLog(log);
@@ -223,6 +244,8 @@ void trajectory_tracking::run()
     std::vector<cv::Mat> frame(3);
     std::vector<cv::Mat> frameGray(3);
 
+
+
     //main processing loop
     while(!this->stopped)
     {
@@ -291,6 +314,7 @@ void trajectory_tracking::run()
         std::vector<std::string> w2(circles.size());
 #endif
 
+
 #ifndef DEBUG_TAG_RECOGNITION
         //#pragma omp parallel for
 #endif
@@ -353,20 +377,41 @@ void trajectory_tracking::run()
                 }
 #endif
             }
+
+
             //            std::vector<std::vector<cv::Point> > path;
             //            OT->lastPath(path);
             //            this->drawPath(panoDrawCircle,path);
 #ifndef DEBUG_TAG_RECOGNITION
             OT->drawPath(panoDrawCircle);
 #endif
+            //for record processed video
+
+            if(isRecord)
+            {
+
+                if(isRecordStart)
+                {
+                    qDebug() << "start";
+                    this->videoOut = new cv::VideoWriter(this->recordFileName.toStdString(),cv::VideoWriter::fourcc('X','V','I','D'),12.0,cv::Size(panoDrawCircle.cols,panoDrawCircle.rows));
+                    isRecordStart = 0;
+                }
+                //qDebug() << "write";
+                this->videoOut->write(panoDrawCircle);
+            }
+
             //resize and show image
             cv::resize(panoDrawCircle,panoDrawCircle,cv::Size(panoDrawCircle.cols/2,panoDrawCircle.rows/2));
             emit sendImage(panoDrawCircle);
 
         }
+
+
         //for calculate processing FPS
         frameCount++;
         emit sendFPS(1000.0/clock.elapsed());
+
+
     }
 #ifndef DEBUG_TAG_RECOGNITION
     OT->saveAllPath();

@@ -230,10 +230,17 @@ void MainWindow::receiveShowImage(const cv::Mat &src)
     static bool status = 0;
     if(status == 0)
     {
+        //        qDebug() << src.cols <<src.rows <<src.channels();
         ui->imageShow_widget->initialize(1,src.cols,src.rows);
         status = 1;
     }
     ui->imageShow_widget->setImage(src);
+
+//    if(this->videoOut != NULL &&ui->actionRecord_Process_Procedure->isChecked())
+//    {
+//        //qDebug() << "write image";
+//        this->viwrite(src);
+//    }
 
 }
 
@@ -827,4 +834,18 @@ void MainWindow::on_text_system_comboBox_currentIndexChanged(const QString &arg1
         else
             emit sendSystemLog(SVMModel_Test.fileName()+" no found!");
     }
+}
+
+void MainWindow::on_actionRecord_Process_Procedure_triggered()
+{
+    if(ui->actionRecord_Process_Procedure->isChecked())
+    {
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Video File"),"record.avi",tr("Video (*.avi)"));
+        TT->initVideoRecord(fileName);
+    }
+    else
+    {
+        TT->finishVideoRecord();
+    }
+
 }

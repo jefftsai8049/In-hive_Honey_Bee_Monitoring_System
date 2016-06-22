@@ -155,7 +155,7 @@ private:
     //bee analysis
     void getGroupBeePatternRation(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector< QVector<double> > &infoRatio);
 
-    void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoCount);
+    void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoRatio);
 
     void getDailyInfo(QVector<beeDailyInfo> &beeInfo);
 
@@ -163,6 +163,8 @@ private:
     void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);
 
     void getDailyMotionPatternInfo(QVector<beeMotionPatternInfo> &dailyMotionInfo);
+
+    void outBeeBehaviorInfo(QVector<trackPro> &data);
 
 signals:
     void sendSystemLog(const QString &log);
