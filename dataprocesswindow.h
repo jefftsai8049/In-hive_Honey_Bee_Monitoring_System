@@ -7,6 +7,10 @@
 #define IMAGE_SIZE_X 1200
 #define IMAGE_SIZE_Y 1600
 
+#include <stdlib.h>
+#include <string>
+#include <sstream>
+
 //QT LIB
 #include <QMainWindow>
 #include <QStringList>
@@ -61,6 +65,20 @@ struct beeMotionPatternInfo
     QVector< QVector<int> > motionPatternCount;
 };
 
+struct inOutInfo
+{
+    QDateTime time;
+    int direction;
+    QString ID;
+};
+
+struct inOutDailyInfo
+{
+    QDate time;
+    QVector<int> count;
+    QVector<QString> ID;
+};
+
 namespace Ui {
 class DataProcessWindow;
 }
@@ -113,6 +131,8 @@ private slots:
 
     void on_motion_pattern_filterpushButton_clicked();
 
+    void on_actionOpen_In_Out_Data_triggered();
+
 private:
     Ui::DataProcessWindow *ui;
 
@@ -126,11 +146,15 @@ private:
 
     QVector<trackPro> data;
 
+    QVector<inOutInfo> inOutData;
+
     objectTrackingParameters OTParams;
 
     QStringList controlWhiteList;
 
     QStringList experimentWhiteList;
+
+    QVector< cv::Scalar > colorTable;
 
     int cVal = 1;
 
@@ -165,6 +189,8 @@ private:
     void getDailyMotionPatternInfo(QVector<beeMotionPatternInfo> &dailyMotionInfo);
 
     void outBeeBehaviorInfo(QVector<trackPro> &data);
+
+    void loadColorTable(const QString &fileName,QVector< cv::Scalar > &colorTable);
 
 signals:
     void sendSystemLog(const QString &log);

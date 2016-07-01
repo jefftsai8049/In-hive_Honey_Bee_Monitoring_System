@@ -49,6 +49,8 @@ public:
 
     void setShowImage(const bool &status);
 
+    void setShowTrajectory(const bool &status);
+
     void setShowText(const bool &status);
 
     void setSVMModelFileName(const std::string &fileName);
@@ -106,6 +108,8 @@ private:
     bool stopped;
 
     bool showImage = true;
+
+    bool showTrajectory = true;
 
     bool showText = true;
 

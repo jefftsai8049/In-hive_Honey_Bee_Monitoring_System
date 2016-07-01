@@ -1,7 +1,7 @@
 #include "dataprocesswindow.h"
 #include "ui_dataprocesswindow.h"
 
-QStringList SMUTM;
+QStringList SUTM;
 
 DataProcessWindow::DataProcessWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,8 +25,10 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     OTS->requestObjectTrackingParameters();
     OT->setPathSegmentSize(this->OTParams.segmentSize);
 
-    SMUTM << "A" << "B" << "C" << "E" << "F" << "G" << "H" << "K" << "L" << "O" << "P" << "R" << "S" << "T" << "U" << "Y" << "Z";
+    SUTM << "A" << "B" << "C" << "E" << "F" << "G" << "H" << "K" << "L" << "O" << "P" << "R" << "S" << "T" << "U" << "Y" << "Z";
 
+
+    loadColorTable("model/color_table.csv",this->colorTable);
 }
 
 DataProcessWindow::~DataProcessWindow()
@@ -37,17 +39,16 @@ DataProcessWindow::~DataProcessWindow()
 
 void DataProcessWindow::on_data_preprocessing_pushButton_clicked()
 {
+    //set button enable
+    ui->data_preprocessing_pushButton->setEnabled(false);
+
     //process raw data
     QFuture<void> rawDataProcessing = QtConcurrent::run(OT,&object_tracking::rawDataPreprocessing,&this->path,&this->data);
     rawDataProcessing.waitForFinished();
     this->path.clear();
 
-
-
-
-
     //set next button enable
-    ui->trajectory_classify_pushButton->setEnabled(true);
+    //    ui->trajectory_classify_pushButton->setEnabled(true);
     ui->white_list_smoothing_pushButton->setEnabled(true);
 
 
@@ -84,6 +85,8 @@ void DataProcessWindow::setObjectTrackingParameters(const objectTrackingParamete
 {
     OTParams = params;
     OT->setPathSegmentSize(this->OTParams.segmentSize);
+
+    emit sendSystemLog("Object tracking parameters set!");
 }
 
 void DataProcessWindow::pseudoColor(const cv::Mat &src, cv::Mat &dst)
@@ -122,7 +125,15 @@ void DataProcessWindow::pseudoColor(const cv::Mat &src, cv::Mat &dst)
 
 void DataProcessWindow::on_actionOpen_Raw_Data_triggered()
 {
+    //set button
     ui->data_preprocessing_pushButton->setEnabled(false);
+    ui->white_list_smoothing_pushButton->setEnabled(false);
+    ui->trajectory_classify_pushButton->setEnabled(false);
+    ui->distributed_area_pushButton->setEnabled(false);
+    ui->mdl_pushButton->setEnabled(false);
+    ui->test_pushButton->setEnabled(false);
+    ui->motion_pattern_filterpushButton->setEnabled(false);
+
     QStringList fileNames;
     fileNames = QFileDialog::getOpenFileNames(this,"Open Data File","","Data Files (*.csv)");
     if(fileNames.size() == 0)
@@ -259,23 +270,49 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 
     //get trajectory distance
 
-    qDebug() << outInfo.absolutePath()+"/trajectory_distance.csv";
+    //    qDebug() << outInfo.absolutePath()+"/trajectory_distance.csv";
     QFile file;
-    file.setFileName(outInfo.absolutePath()+"/trajectory_distance.csv");
+    file.setFileName(outInfo.absolutePath()+"/trajectory_info.csv");
     file.open(QIODevice::WriteOnly);
+    QTextStream outTra(&file);
+
+    outTra << "ID,StartTime,Trajectory_distance,Trajectory_velocity,Detected_time,"
+           << "Static_count,Loitering_count,Moving_forward_count,Moving_CW_count,Moving_CCW_count,Waggle_count,Count_sum,"
+           << "Static_ratio,Loitering_ratio,Moving_ratio,Group\n";
 
     for(int i = 0; i < this->data.size(); i++)
     {
-        file.write(this->data[i].ID.toStdString().c_str());
-        file.write(",");
-        file.write(this->data[i].startTime.toString("yyyy-MM-dd-hh-mm-ss").toStdString().c_str());
-        file.write(",");
-        file.write(QString::number(this->data[i].getTrajectoryMovingDistance()).toStdString().c_str());
-        file.write(",");
-        file.write(QString::number(this->data[i].getTrajectoryMovingVelocity()).toStdString().c_str());
+        if(this->data[i].getTrajectoryMovingVelocity() < 250 &&this->data[i].position.size() > 12)
+        {
+            outTra << this->data[i].ID << ",";
+            outTra << this->data[i].startTime.toString("yyyy-MM-dd-hh-mm-ss") << ",";
+            outTra << this->data[i].getTrajectoryMovingDistance() << ",";
+            outTra << this->data[i].getTrajectoryMovingVelocity() << ",";
+            outTra << this->data[i].getDetectedTime() << ",";
 
+            QVector<double> patternCount = this->data[i].getPatternCount();
+            outTra << patternCount[0] << ",";
+            outTra << patternCount[1] << ",";
+            outTra << patternCount[2] << ",";
+            outTra << patternCount[3] << ",";
+            outTra << patternCount[4] << ",";
+            outTra << patternCount[5] << ",";
 
-        file.write("\n");
+            double patternCountSum = patternCount[0]+patternCount[1]+patternCount[2]+patternCount[3]+patternCount[4]+patternCount[5];
+            outTra << patternCountSum << ",";
+            outTra << patternCount[0]/patternCountSum << ",";
+            outTra << patternCount[1]/patternCountSum << ",";
+            outTra << (patternCount[2]+patternCount[3]+patternCount[4]+patternCount[5])/patternCountSum << ",";
+
+            if(this->controlWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
+                outTra << 0;
+            else if(this->experimentWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
+                outTra << 1;
+            else
+                outTra << -1;
+
+            outTra << "\n";
+        }
     }
     file.close();
 
@@ -564,6 +601,9 @@ void DataProcessWindow::plotBeeInfo(const QVector<trackPro> &data)
     QFont font;
     font.setPointSize(14);
 
+    //clear plot
+    //    ui->bee_info_widget->plotLayout()->clear();
+
     //insert title and set font
     ui->bee_info_widget->plotLayout()->insertRow(0);
     QCPPlotTitle *beeTitle = new QCPPlotTitle(ui->bee_info_widget, "Daily Effectively Track");
@@ -743,7 +783,7 @@ void DataProcessWindow::getIndividualBeePatternRatio(QVector<trackPro> &data,QSt
     //remove impossible data
     for(int i = 0; i < individualInfoID.size(); i++)
     {
-        if(!SMUTM.contains(QString(individualInfoID[i][1])))
+        if(!SUTM.contains(QString(individualInfoID[i][1])))
         {
             individualInfoID.removeAt(i);
             individualInfoRatio.remove(i);
@@ -953,6 +993,35 @@ void DataProcessWindow::outBeeBehaviorInfo(QVector<trackPro> &data)
 
 }
 
+void DataProcessWindow::loadColorTable(const QString &fileName, QVector<cv::Scalar> &colorTable)
+{
+    colorTable.clear();
+
+    QFile file;
+    file.setFileName(fileName);
+    if(!file.exists())
+    {
+        emit sendSystemLog("color table load failed!");
+        return;
+    }
+    else
+        emit sendSystemLog("color table load success!");
+
+    file.open(QIODevice::ReadOnly);
+
+    while(!file.atEnd())
+    {
+        QString line = file.readLine().trimmed();
+        QStringList str = line.split(',');
+        //        qDebug() << str;
+        if(str.size() > 2){
+            cv::Scalar color = cv::Scalar(str[0].toInt(),str[1].toInt(),str[2].toInt());
+            colorTable.append(color);
+        }
+    }
+
+}
+
 void DataProcessWindow::on_actionWhite_List_triggered()
 {
     WL->show();
@@ -976,10 +1045,14 @@ void DataProcessWindow::on_mdl_pushButton_clicked()
 
 void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 {
+    //set button
+    ui->white_list_smoothing_pushButton->setEnabled(false);
 
     //if without setting whitelist
     if((this->controlWhiteList+this->experimentWhiteList).isEmpty())
         WL->exec();
+    if((this->controlWhiteList+this->experimentWhiteList).isEmpty())
+        return;
 
     //white list filter
     emit sendSystemLog("before white list filter : "+QString::number(this->data.size()));
@@ -1033,17 +1106,48 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
     emit sendSystemLog("after remove outlier : "+QString::number(this->data.size()));
 
+    qDebug() << "wrong";
+    //remove wrong day data
+    if(ui->day_selected_checkBox->isChecked())
+    {
+        QDateTime controlStratDate = ui->control_start_dateEdit->dateTime();
+        QDateTime experimentStratDate = ui->experiment_start_dateEdit->dateTime();
+        for(int i = 0; i < this->data.size();i++)
+        {
+            if(this->controlWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
+            {
+                if(this->data[i].startTime.daysTo(controlStratDate) > 0)
+                {
+                    this->data.remove(i);
+                    i--;
+                    //                break;
+                }
+            }
+            else if(this->experimentWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
+            {
+                if(this->data[i].startTime.daysTo(experimentStratDate) > 0)
+                {
+                    this->data.remove(i);
+                    i--;
+                    //                break;
+                }
+            }
+        }
+        emit sendSystemLog("after remove wrong day data : "+QString::number(this->data.size()));
+    }
+
+    qDebug() << "day";
     //get daily info
     getDailyInfo(beeInfo);
 
 
     //show bee daily info
-    for(int i = 0; i < beeInfo.size(); i++)
-    {
-        qDebug() << beeInfo[i].date;
-        qDebug() << beeInfo[i].IDList;
-        qDebug() << beeInfo[i].trajectoryCount;
-    }
+    //    for(int i = 0; i < beeInfo.size(); i++)
+    //    {
+    //        qDebug() << beeInfo[i].date;
+    //        qDebug() << beeInfo[i].IDList;
+    //        qDebug() << beeInfo[i].trajectoryCount;
+    //    }
 
     //plot chart
     this->plotBeeInfo(this->data);
@@ -1080,7 +1184,11 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     dailyNumberFile.close();
     emit sendSystemLog("Daily Info File Saved!");
 
-
+    //set button
+    ui->trajectory_classify_pushButton->setEnabled(true);
+    ui->distributed_area_pushButton->setEnabled(true);
+    ui->mdl_pushButton->setEnabled(true);
+    ui->test_pushButton->setEnabled(true);
 
 
 
@@ -1088,27 +1196,7 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
 void DataProcessWindow::on_test_pushButton_clicked()
 {
-    //    QString fileDir;
-    //    QString currentDir = QDir::currentPath();
-    //    fileDir = currentDir+"/matlab";
-    //    qDebug() << fileDir;
 
-
-    //    Engine *ep;
-    //    ep = engOpen("");
-    //    QString cmd = "cd "+fileDir;
-    //    engEvalString(ep, cmd.toStdString().c_str());
-    //    engEvalString(ep, "dailyInfo");
-    //    mxArray *fileName;
-
-    //    ep = engOpen("");
-    //    fileName = mxCreateString(fileNameStr.toStdString().c_str());
-    //    engPutVariable(ep, "fileName", fileName);
-    //memcpy((void *)mxGetPr(fileName), (void *)time, sizeof(time));
-    //        fprintf(stderr, "\nCan't start MATLAB engine\n");
-    //        return EXIT_FAILURE;
-    //    }
-    //    fileName = mxCreateCharMatrixFromStrings_700();
 }
 
 void DataProcessWindow::on_distributed_area_pushButton_clicked()
@@ -1119,6 +1207,10 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
         srcControl = srcControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
         cv::Mat srcExperiment;
         srcExperiment = srcExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
+        cv::Mat traControl;
+        traControl = traControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC3);
+        cv::Mat traExperiment;
+        traExperiment = traExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC3);
 
         double controlCount = 0;
         double experimentCount = 0;
@@ -1126,8 +1218,14 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
         for(int i = 0;i < this->data.size();i++)
         {
             //qDebug() << this->data[i].ID << this->data[i].position.size();
+            char firstChr = (char)this->data[i].ID.toStdString()[0]-65;
+            char lastChr = (char)this->data[i].ID.toStdString()[1]-65;
+            cv::Scalar lineColor = this->colorTable[firstChr*17+lastChr];
+            //qDebug() << firstChr << lastChr << firstChr*17+lastChr;
+            //            qDebug() << this->colorTable[firstChr*17+lastChr].
             if(this->controlWhiteList.indexOf(this->data[i].ID.at(0)) > -1)
             {
+
                 //qDebug() << "control "<< data[i].ID;
                 for(int j = 0;j < this->data[i].position.size(); j++)
                 {
@@ -1141,11 +1239,14 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
                         controlCount++;
                         //                        if(srcControl.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
                         srcControl.at<uchar>(this->data[i].position[j]) += cVal;
+                        if(j < this->data[i].position.size()-1)
+                            cv::line(traControl,this->data[i].position[j],this->data[i].position[j+1],lineColor,3);
                     }
                 }
             }
             else if(this->experimentWhiteList.indexOf(this->data[i].ID.at(0)) > -1)
             {
+
                 //qDebug() << "experiment "<< data[i].ID;
                 for(int j = 0;j < this->data[i].position.size(); j++)
                 {
@@ -1158,6 +1259,8 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
                         experimentCount++;
                         //                        if(srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
                         srcExperiment.at<uchar>(this->data[i].position[j])+= cVal;
+                        if(j < this->data[i].position.size()-1)
+                            cv::line(traExperiment,this->data[i].position[j],this->data[i].position[j+1],lineColor,3);
                     }
                 }
             }
@@ -1186,6 +1289,12 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
         cv::imwrite(dstName,dstControl);
         dstName = (outInfo.absolutePath()+"/dstExperiment.jpg").toStdString();
         cv::imwrite(dstName,dstExperiment);
+
+        dstName = (outInfo.absolutePath()+"/traControl.jpg").toStdString();
+        cv::imwrite(dstName,traControl);
+        dstName = (outInfo.absolutePath()+"/traExperiment.jpg").toStdString();
+        cv::imwrite(dstName,traExperiment);
+
     }
 }
 
@@ -1300,4 +1409,134 @@ void DataProcessWindow::on_motion_pattern_filterpushButton_clicked()
     }
     inFile.close();
     outFile.close();
+}
+
+void DataProcessWindow::on_actionOpen_In_Out_Data_triggered()
+{
+
+    //load in-out data
+    QStringList fileNames = QFileDialog::getOpenFileNames(this,"Select one or more files to open","","Text Files (*.txt)");
+
+    if(fileNames.isEmpty())
+        return;
+    inOutData.clear();
+    for(int i = 0; i < fileNames.size(); i++)
+    {
+        QFile file;
+        file.setFileName(fileNames[i]);
+        file.open(QIODevice::ReadOnly);
+
+        while(!file.atEnd())
+        {
+            QString dateStr = file.readLine().trimmed();
+            QString IDDirStr = file.readLine().trimmed();
+
+            inOutInfo info;
+            info.time = QDateTime::fromString(dateStr,"yyyy-MM-dd hh:mm:ss");
+            QStringList IDDir = IDDirStr.split(' ');
+            info.ID = IDDir[0];
+            info.direction = 0;
+            if(IDDir[2] == "in")
+                info.direction = 1;
+
+            inOutData.append(info);
+        }
+
+    }
+
+    //print in-out data
+    QVector<inOutDailyInfo> dailyInfo;
+    for(int i = 0; i < inOutData.size(); i++)
+    {
+        if((this->controlWhiteList.indexOf(QString(inOutData[i].ID[0])) > -1 && SUTM.contains(QString(inOutData[i].ID[1])))
+                || (this->experimentWhiteList.indexOf(QString(inOutData[i].ID[0])) > -1 && SUTM.contains(QString(inOutData[i].ID[1]))))
+        {
+
+            bool inDate = 0;
+            int dateID = 0;
+            for(int j = 0; j< dailyInfo.size(); j++)
+            {
+                if(inOutData[i].time.date() == dailyInfo[j].time)
+                {
+                    inDate = 1;
+                    dateID = j;
+                    break;
+                }
+            }
+
+            if(!inDate)
+            {
+                inOutDailyInfo dInfo;
+                dInfo.time = inOutData[i].time.date();
+                dailyInfo.append(dInfo);
+                inDate = 1;
+                dateID = dailyInfo.size()-1;
+            }
+
+            bool inID = 0;
+            int IDID = 0;
+            for(int j = 0; j < dailyInfo[dateID].ID.size(); j++)
+            {
+                if(inOutData[i].ID == dailyInfo[dateID].ID[j])
+                {
+                    inID = 1;
+                    IDID = j;
+                    break;
+                }
+            }
+            if(!inID)
+            {
+                dailyInfo[dateID].ID.append(inOutData[i].ID);
+                dailyInfo[dateID].count.append(0);
+                inID = 1;
+                IDID = dailyInfo[dateID].count.size()-1;
+
+            }
+            dailyInfo[dateID].count[IDID]++;
+        }
+        else
+        {
+            inOutData.remove(i);
+            i--;
+        }
+    }
+
+    QString msg;
+    QTextStream out(&msg);
+    for(int i = 0; i< dailyInfo.size(); i++)
+    {
+        qDebug() << dailyInfo[i].time.toString("yyyy-MM-dd");
+        out << dailyInfo[i].time.toString("yyyy-MM-dd") << "\n";
+        for(int j = 0; j < dailyInfo[i].ID.size(); j++)
+        {
+            out << dailyInfo[i].ID[j] << "\t" << dailyInfo[i].count[j] << "\n";
+        }
+    }
+
+
+
+    QVector<QString> IDList;
+    for(int i = 0; i < inOutData.size(); i++)
+    {
+      if(!IDList.contains(inOutData[i].ID))
+          IDList.append(inOutData[i].ID);
+    }
+
+    for(int i = 0; i < IDList.size()-1; i++)
+    {
+        for(int j = i; j < IDList.size(); j++)
+        {
+            if(IDList[i] >= IDList[j])
+            {
+                QString temp = IDList[i];
+                IDList[i] = IDList[j];
+                IDList[j] = temp;
+            }
+        }
+    }
+    for(int i = 0; i < IDList.size(); i++)
+    {
+        out << "'" << IDList[i] << "'" << ";";
+    }
+    ui->in_out_info_textBrowser->append(msg);
 }

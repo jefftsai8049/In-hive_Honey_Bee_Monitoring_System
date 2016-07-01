@@ -132,6 +132,8 @@ private slots:
 
     void on_actionRecord_Process_Procedure_triggered();
 
+    void on_show_trajectory_checkBox_clicked();
+
 private:
     Ui::MainWindow *ui;
 

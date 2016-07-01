@@ -103,6 +103,11 @@ void trajectory_tracking::setShowImage(const bool &status)
     showImage = status;
 }
 
+void trajectory_tracking::setShowTrajectory(const bool &status)
+{
+    showTrajectory = status;
+}
+
 void trajectory_tracking::setShowText(const bool &status)
 {
     showText = status;
@@ -154,11 +159,11 @@ void trajectory_tracking::stopStitch()
 void trajectory_tracking::initVideoRecord(const QString &fileName)
 {
     qDebug() << "open video writer";
-//    if(this->videoOut == NULL)
-//    {
-//
-//        this->videoOut = new cv::VideoWriter();
-//    }
+    //    if(this->videoOut == NULL)
+    //    {
+    //
+    //        this->videoOut = new cv::VideoWriter();
+    //    }
     recordFileName = fileName;
     this->isRecord = true;
 }
@@ -368,7 +373,10 @@ void trajectory_tracking::run()
                 cv::Point center(circles[i][0], circles[i][1]);
                 int radius = circles[i][2];
                 cv::Scalar color = cv::Scalar(255,255,255);
-                cv::circle( panoDrawCircle, center, radius, color, 1, 8, 0 );
+                if(showTrajectory)
+                {
+                    cv::circle( panoDrawCircle, center, radius, color, 1, 8, 0 );
+                }
 #ifndef DEBUG_TAG_RECOGNITION
                 if(showText)
                 {
@@ -383,7 +391,8 @@ void trajectory_tracking::run()
             //            OT->lastPath(path);
             //            this->drawPath(panoDrawCircle,path);
 #ifndef DEBUG_TAG_RECOGNITION
-            OT->drawPath(panoDrawCircle);
+            if(showTrajectory)
+                OT->drawPath(panoDrawCircle);
 #endif
             //for record processed video
 

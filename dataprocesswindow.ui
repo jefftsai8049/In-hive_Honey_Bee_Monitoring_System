@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1259</width>
+    <width>1446</width>
     <height>787</height>
    </rect>
   </property>
@@ -23,9 +23,9 @@
    <widget class="QTextBrowser" name="system_log_textBrowser">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>30</x>
       <y>620</y>
-      <width>841</width>
+      <width>1011</width>
       <height>111</height>
      </rect>
     </property>
@@ -33,7 +33,7 @@
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
-      <x>870</x>
+      <x>1060</x>
       <y>630</y>
       <width>361</width>
       <height>91</height>
@@ -42,41 +42,6 @@
     <property name="value">
      <number>0</number>
     </property>
-   </widget>
-   <widget class="QGroupBox" name="groupBox">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>60</y>
-      <width>221</width>
-      <height>111</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Step 2.</string>
-    </property>
-    <widget class="QPushButton" name="data_preprocessing_pushButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>30</y>
-       <width>181</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>14</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Preprocessing</string>
-     </property>
-    </widget>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
@@ -95,7 +60,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>180</y>
+      <y>130</y>
       <width>321</width>
       <height>41</height>
      </rect>
@@ -107,26 +72,89 @@
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>230</y>
-      <width>221</width>
-      <height>141</height>
+      <x>170</x>
+      <y>220</y>
+      <width>551</width>
+      <height>161</height>
      </rect>
     </property>
     <property name="title">
-     <string>Step 4.</string>
+     <string/>
     </property>
-    <widget class="QLabel" name="current_white_list_label">
+    <widget class="QDateEdit" name="control_start_dateEdit">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>40</y>
-       <width>181</width>
+       <x>390</x>
+       <y>50</y>
+       <width>141</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="date">
+      <date>
+       <year>2016</year>
+       <month>1</month>
+       <day>1</day>
+      </date>
+     </property>
+    </widget>
+    <widget class="QDateEdit" name="experiment_start_dateEdit">
+     <property name="geometry">
+      <rect>
+       <x>390</x>
+       <y>110</y>
+       <width>141</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="dateTime">
+      <datetime>
+       <hour>0</hour>
+       <minute>0</minute>
+       <second>0</second>
+       <year>2016</year>
+       <month>1</month>
+       <day>1</day>
+      </datetime>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>60</y>
+       <width>91</width>
        <height>21</height>
       </rect>
      </property>
      <property name="text">
-      <string>White List Filter:</string>
+      <string>Control :</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>250</x>
+       <y>120</y>
+       <width>131</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Experiment :</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="day_selected_checkBox">
+     <property name="geometry">
+      <rect>
+       <x>374</x>
+       <y>9</y>
+       <width>161</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Day selected</string>
      </property>
     </widget>
     <widget class="QPushButton" name="white_list_smoothing_pushButton">
@@ -146,18 +174,37 @@
 Remove Outlier</string>
      </property>
     </widget>
+    <widget class="QLabel" name="current_white_list_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>351</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>White List Filter:</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>740</x>
       <y>20</y>
       <width>691</width>
       <height>591</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>20</width>
+      <height>20</height>
+     </size>
     </property>
     <widget class="QWidget" name="bee_info">
      <attribute name="title">
@@ -209,100 +256,227 @@ Remove Outlier</string>
       </property>
      </widget>
     </widget>
+    <widget class="QWidget" name="in_out_info">
+     <attribute name="title">
+      <string>In-Out Info</string>
+     </attribute>
+     <widget class="QTextBrowser" name="in_out_info_textBrowser">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>661</width>
+        <height>531</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
    </widget>
-   <widget class="QPushButton" name="mdl_pushButton">
+   <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>260</x>
-      <y>430</y>
-      <width>221</width>
-      <height>61</height>
+      <x>330</x>
+      <y>410</y>
+      <width>271</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>MDL</string>
+     <string>Step 5. Trajectory Analysis</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="trajectory_classify_pushButton">
+   <widget class="QPushButton" name="data_preprocessing_pushButton">
     <property name="enabled">
      <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>430</y>
-      <width>211</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Trajectory Classify</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>380</y>
-      <width>401</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Step 5. Trajectory Classify(Fix Length)</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="test_pushButton">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>500</y>
+      <x>350</x>
+      <y>50</y>
       <width>221</width>
       <height>61</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Test</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="distributed_area_pushButton">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>500</y>
-      <width>211</width>
-      <height>61</height>
-     </rect>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>14</pointsize>
+     </font>
     </property>
     <property name="text">
-     <string>Distributed Area</string>
+     <string>Preprocessing</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="c_value_spinBox">
+   <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>330</y>
-      <width>81</width>
+      <x>350</x>
+      <y>10</y>
+      <width>301</width>
       <height>41</height>
      </rect>
     </property>
-    <property name="value">
-     <number>1</number>
+    <property name="text">
+     <string>Step 2. Preprocessing</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="motion_pattern_filterpushButton">
+   <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>90</y>
-      <width>231</width>
+      <x>277</x>
+      <y>20</y>
+      <width>71</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>120</y>
+      <width>3</width>
       <height>61</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Motion Pattern Filter</string>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
     </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>180</y>
+      <width>361</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Step 4. Remove Outlier and Filter</string>
+    </property>
+   </widget>
+   <widget class="Line" name="line_3">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>140</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>450</y>
+      <width>651</width>
+      <height>151</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string/>
+    </property>
+    <widget class="QPushButton" name="distributed_area_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>201</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Distributed Area</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="mdl_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>10</y>
+       <width>201</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>MDL</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="trajectory_classify_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>201</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Trajectory Classify</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="c_value_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>90</y>
+       <width>81</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="value">
+      <number>1</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="test_pushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>430</x>
+       <y>80</y>
+       <width>211</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Test</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="motion_pattern_filterpushButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>430</x>
+       <y>10</y>
+       <width>211</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Motion Pattern Filter</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -310,8 +484,8 @@ Remove Outlier</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1259</width>
-     <height>25</height>
+     <width>1446</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -322,6 +496,8 @@ Remove Outlier</string>
     <addaction name="actionOpen_Processed_Data"/>
     <addaction name="separator"/>
     <addaction name="actionOpen_Sensor_Data"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen_In_Out_Data"/>
    </widget>
    <widget class="QMenu" name="menuSetting">
     <property name="title">
@@ -363,6 +539,11 @@ Remove Outlier</string>
   <action name="actionWhite_List">
    <property name="text">
     <string>White List</string>
+   </property>
+  </action>
+  <action name="actionOpen_In_Out_Data">
+   <property name="text">
+    <string>Open In-Out Data</string>
    </property>
   </action>
  </widget>

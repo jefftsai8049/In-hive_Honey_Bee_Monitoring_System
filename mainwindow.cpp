@@ -134,7 +134,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //load SVM tag recognition model
     SVMModel_SUTM.setFileName("model/model_HOG_PCA_25_-2_0.984706_SUTM.yaml");
-    SVMModel_MUTM.setFileName("model/model_HOG_PCA_25_-2_0.984706_MTUM.yaml");
+    SVMModel_MUTM.setFileName("model/model_HOG_PCA_25_-2_0.983461_MUTM.yaml");
     SVMModel_Test.setFileName("model/model_HOG_PCA_25_-2_0.984706_Test.yaml");
 
     if(SVMModel_SUTM.exists())
@@ -848,4 +848,9 @@ void MainWindow::on_actionRecord_Process_Procedure_triggered()
         TT->finishVideoRecord();
     }
 
+}
+
+void MainWindow::on_show_trajectory_checkBox_clicked()
+{
+    TT->setShowTrajectory(ui->show_trajectory_checkBox->isChecked());
 }

@@ -2,5 +2,7 @@
     <qresource prefix="/icon">
         <file>icon/honeybee.jpg</file>
         <file>icon/save.png</file>
+        <file>icon/start.png</file>
+        <file>icon/stop.png</file>
     </qresource>
 </RCC>
