@@ -79,6 +79,17 @@ struct inOutDailyInfo
     QVector<QString> ID;
 };
 
+struct frameDetected
+{
+    QDateTime time;
+    QVector<QString> IDList;
+    QVector<cv::Point> positionList;
+    QVector<int> interactionID;
+
+    void getInteractions(QVector<int> &interaction, const double &distanceThreshold);
+};
+
+
 namespace Ui {
 class DataProcessWindow;
 }
@@ -133,6 +144,8 @@ private slots:
 
     void on_actionOpen_In_Out_Data_triggered();
 
+    void on_sub_group_distributed_area_pushButton_clicked();
+
 private:
     Ui::DataProcessWindow *ui;
 
@@ -147,6 +160,8 @@ private:
     QVector<trackPro> data;
 
     QVector<inOutInfo> inOutData;
+
+    QVector<QString> inOutIDList;
 
     objectTrackingParameters OTParams;
 

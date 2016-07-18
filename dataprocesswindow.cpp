@@ -1196,6 +1196,249 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
 void DataProcessWindow::on_test_pushButton_clicked()
 {
+    QTime t;
+    t.start();
+    //calculate frame by frame detected honeybee
+    QVector<frameDetected> frames;
+
+    //start time scan
+    QDateTime startTime = this->data[0].startTime;
+    for(int i = 1; i < this->data.size(); i++)
+    {
+        static int count = 0;
+        if(startTime.msecsTo(this->data[i].startTime) < 0)
+            startTime = this->data[i].startTime;
+        else
+            count++;
+        if(count > 1000)
+            break;
+    }
+    qDebug () << "1" << t.elapsed();
+    QDateTime endTime = this->data[this->data.size()-1].endTime;
+    double timeDelta = startTime.msecsTo(endTime);
+    double frameSize = timeDelta/1000.0*12.0;
+    frames.resize((int)frameSize+1);
+
+    for(int i = 0; i < (int)frameSize+1; i++)
+    {
+        frames[i].time = startTime.addMSecs(1000.0/12.0*i);
+    }
+
+    int lastPosition = 0;
+    for(int i = 0; i < this->data.size(); i++)
+    {
+        double progress = (double)i/(double)this->data.size()*100.0;
+        //        if((int)progress%10 == 0)
+        qDebug() << progress;
+
+
+        int frameID = 0;
+        int j;
+        if(lastPosition-this->data[i].size < 0)
+            j = 0;
+        else
+            j = lastPosition-this->data[i].size;
+
+        int timeGap = this->data[i].startTime.msecsTo(frames[j].time);
+        if(timeGap > 1000.0/12.0)
+            j += timeGap/(1000.0/12.0);
+
+
+        for(;j < frames.size()-1; j++)
+        {
+            int timeGapb = this->data[i].startTime.msecsTo(frames[j].time);
+            int timeGapa = this->data[i].startTime.msecsTo(frames[j+1].time);
+            if(abs(timeGapa) < 1000.0/12.0/2.0)
+            {
+                frameID = j;
+                lastPosition = frameID;
+                break;
+            }
+            else if(abs(timeGapb) < 1000.0/12.0/2.0)
+            {
+                frameID = j+1;
+                lastPosition = frameID;
+                break;
+            }
+            else
+            {
+                if(timeGapb < 0 && timeGapa > 0)
+                {
+                    frameID = j;
+                    lastPosition = frameID;
+                    break;
+                }
+            }
+
+        }
+        //        qDebug () << "2" << t.elapsed();
+        //        qDebug() << i << frameID << this->data[i].size << frames.size() << frames[frameID].time <<endTime;
+        for(int j = 0; j < this->data[i].size;j++)
+        {
+            if(j+frameID < frames.size())
+            {
+                if(!frames[frameID+j].IDList.contains(this->data[i].ID))
+                {
+                    frames[frameID+j].IDList.append(this->data[i].ID);
+                    frames[frameID+j].positionList.append(this->data[i].position[j]);
+                }
+            }
+        }
+        //        qDebug () << "2.1" << t.elapsed();
+    }
+
+    qDebug () << "3" << t.elapsed();
+    for(int i = 0; i < frames.size(); i++)
+    {
+        QVector<int> interaction;
+        frames[i].getInteractions(interaction,100);
+        //        if(interaction.size() > 0)
+        //            qDebug() << interaction << frames[i].IDList;
+    }
+
+    qDebug () << "4" << t.elapsed();
+    //plot interaction
+    QStringList IDList;
+    for(int i = 0; i < frames.size();i++)
+    {
+        for(int j = 0; j < frames[i].IDList.size(); j++)
+        {
+            if(!IDList.contains(frames[i].IDList[j]))
+            {
+                IDList.append(frames[i].IDList[j]);
+            }
+        }
+    }
+    qDebug () << "5" << t.elapsed();
+    cv::Mat interactionMat;
+    interactionMat = cv::Mat::zeros(IDList.size(),IDList.size(),CV_8UC1);
+
+    for(int i = 0; i < frames.size();i++)
+    {
+        //        if(frames.size()/i*100%10 == 0)
+        //                qDebug() << i <<  frames.size();
+
+        for(int j = 0; j < frames[i].interactionID.size(); j+=2)
+        {
+            QString IDA = frames[i].IDList[frames[i].interactionID[j]];
+            QString IDB = frames[i].IDList[frames[i].interactionID[j+1]];
+
+
+            int m = IDList.indexOf(IDA);
+            int n = IDList.indexOf(IDB);
+            if(m>n)
+            {
+                int temp = m;
+                m = n;
+                n = temp;
+            }
+            if(interactionMat.at<uchar>(m,n) < 255)
+                interactionMat.at<uchar>(m,n)++;
+        }
+    }
+    //sort mat
+    QStringList IDListRow = IDList;
+    QStringList IDListCol = IDList;
+    for(int i = 0; i < interactionMat.rows;i++)
+    {
+        for(int m = i+1; m < interactionMat.cols-1; m++)
+        {
+            for(int n = m+1; n < interactionMat.cols;n++)
+            {
+                int sumM = 0;
+                int sumN = 0;
+                for(int k = 0; k < interactionMat.cols; k++)
+                {
+                    sumM += interactionMat.at<uchar>(k,m);
+                    sumN += interactionMat.at<uchar>(k,n);
+                }
+                if(sumM < sumN)
+                {
+                    for(int k = 0; k < interactionMat.cols; k++)
+                    {
+                        uchar temp = interactionMat.at<uchar>(k,m);
+                        interactionMat.at<uchar>(k,m) = interactionMat.at<uchar>(k,n);
+                        interactionMat.at<uchar>(k,n) = temp;
+                    }
+                    IDListCol.swap(m,n);
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < interactionMat.cols;i++)
+    {
+        for(int m = i+1; m < interactionMat.rows-1; m++)
+        {
+            for(int n = m+1; n < interactionMat.rows;n++)
+            {
+                int sumM = 0;
+                int sumN = 0;
+                for(int k = 0; k < interactionMat.rows; k++)
+                {
+                    sumM += interactionMat.at<uchar>(m,k);
+                    sumN += interactionMat.at<uchar>(n,k);
+                }
+                if(sumM < sumN)
+                {
+                    for(int k = 0; k < interactionMat.rows; k++)
+                    {
+                        uchar temp = interactionMat.at<uchar>(m,k);
+                        interactionMat.at<uchar>(m,k) = interactionMat.at<uchar>(n,k);
+                        interactionMat.at<uchar>(n,k) = temp;
+                    }
+                    IDListRow.swap(m,n);
+                }
+            }
+        }
+    }
+
+
+
+    qDebug () << "6" << t.elapsed();
+    int scaleSize = 20;
+    cv::Mat interactionMatBig;
+    cv::resize(interactionMat,interactionMatBig,cv::Size(interactionMat.cols*scaleSize,interactionMat.rows*scaleSize),0,0,cv::INTERSECT_NONE);
+
+
+    cv::copyMakeBorder(interactionMatBig,interactionMatBig,scaleSize,0,scaleSize,0,cv::BORDER_CONSTANT,cv::Scalar(20));
+    cv::applyColorMap(interactionMatBig,interactionMatBig,cv::COLORMAP_JET);
+
+    if(!inOutIDList.empty())
+    {
+        for(int i = 0; i < IDList.size();i++)
+        {
+            if(inOutIDList.contains(IDListCol[i]))
+            {
+                cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,255));
+            }
+
+            else
+            {
+                cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+            }
+
+            if(inOutIDList.contains(IDListRow[i]))
+            {
+                cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,255));
+            }
+            else
+            {
+                cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+            }
+        }
+    }
+    else
+    {
+        for(int i = 0; i < IDList.size();i++)
+        {
+            cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+            cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+        }
+    }
+    qDebug () << "7" << t.elapsed();
+    cv::imshow("interaction",interactionMatBig);
+    cv::imwrite("out/bee_info/interaction.jpg",interactionMatBig);
 
 }
 
@@ -1425,9 +1668,11 @@ void DataProcessWindow::on_actionOpen_In_Out_Data_triggered()
         QFile file;
         file.setFileName(fileNames[i]);
         file.open(QIODevice::ReadOnly);
+        emit sendSystemLog(fileNames[i]);
 
         while(!file.atEnd())
         {
+
             QString dateStr = file.readLine().trimmed();
             QString IDDirStr = file.readLine().trimmed();
 
@@ -1515,28 +1760,153 @@ void DataProcessWindow::on_actionOpen_In_Out_Data_triggered()
 
 
 
-    QVector<QString> IDList;
+
+    inOutIDList.clear();
     for(int i = 0; i < inOutData.size(); i++)
     {
-      if(!IDList.contains(inOutData[i].ID))
-          IDList.append(inOutData[i].ID);
+        if(!inOutIDList.contains(inOutData[i].ID))
+            inOutIDList.append(inOutData[i].ID);
     }
 
-    for(int i = 0; i < IDList.size()-1; i++)
+    for(int i = 0; i < inOutIDList.size()-1; i++)
     {
-        for(int j = i; j < IDList.size(); j++)
+        for(int j = i; j < inOutIDList.size(); j++)
         {
-            if(IDList[i] >= IDList[j])
+            if(inOutIDList[i] >= inOutIDList[j])
             {
-                QString temp = IDList[i];
-                IDList[i] = IDList[j];
-                IDList[j] = temp;
+                QString temp = inOutIDList[i];
+                inOutIDList[i] = inOutIDList[j];
+                inOutIDList[j] = temp;
             }
         }
     }
-    for(int i = 0; i < IDList.size(); i++)
+    for(int i = 0; i < inOutIDList.size(); i++)
     {
-        out << "'" << IDList[i] << "'" << ";";
+        out << "'" << inOutIDList[i] << "'" << ";";
     }
+
     ui->in_out_info_textBrowser->append(msg);
+}
+
+
+void frameDetected::getInteractions(QVector<int> &interaction, const double &distanceThreshold)
+{
+    interaction.clear();
+    for(int m = 0; m < this->IDList.size()-1; m++)
+    {
+        for(int n = m+1; n < this->IDList.size(); n++)
+        {
+            double distance = sqrt(pow(this->positionList[m].x-this->positionList[n].x,2)+pow(this->positionList[m].y-this->positionList[n].y,2));
+            if(distance < distanceThreshold)
+            {
+                interaction.append(m);
+                interaction.append(n);
+            }
+        }
+    }
+    this->interactionID = interaction;
+
+}
+
+void DataProcessWindow::on_sub_group_distributed_area_pushButton_clicked()
+{
+    if(!data.isEmpty())
+    {
+        QString targetStr = ui->target_list_lineEdit->text();
+        targetStr.replace("'","");
+
+
+        QStringList targetList;
+        targetList = targetStr.split(";");
+        qDebug() << targetList;
+//        targetList  << "AA" << "AC" << "AG" << "AL" << "AP" << "AR" << "AT" << "AV" << "BB" << "BF"
+//                    << "BH" << "BO" << "BP" << "BP" << "BR" << "BT" << "BY" << "BZ" << "CF" << "CH"
+//                    << "CR" << "CP" << "CT" << "CG" << "CZ" << "EB" << "EG" << "DA" << "FB" << "FE"
+//                    << "FF" << "FC" << "FG" << "FH" << "FL" << "FK" << "FR" << "FT" << "FY" << "GA"
+//                    << "GB" << "GC" << "GF" << "GK" << "GP" << "GO" << "GT" << "GZ";
+
+        cv::Mat srcControl;
+        srcControl = srcControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
+        cv::Mat srcExperiment;
+        srcExperiment = srcExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
+        cv::Mat traControl;
+        traControl = traControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC3);
+        cv::Mat traExperiment;
+        traExperiment = traExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC3);
+
+        double controlCount = 0;
+        double experimentCount = 0;
+
+        for(int i = 0;i < this->data.size();i++)
+        {
+            char firstChr = (char)this->data[i].ID.toStdString()[0]-65;
+            char lastChr = (char)this->data[i].ID.toStdString()[1]-65;
+            cv::Scalar lineColor = this->colorTable[firstChr*17+lastChr];
+            if(targetList.indexOf(this->data[i].ID) > -1)
+            {
+
+                for(int j = 0;j < this->data[i].position.size(); j++)
+                {
+                    if(this->data[i].position[j].x >= 3600 ||this->data[i].position[j].y >= 1600)
+                    {
+
+                    }
+                    else
+                    {
+                        controlCount++;
+                        srcControl.at<uchar>(this->data[i].position[j]) += cVal;
+                        if(j < this->data[i].position.size()-1)
+                            cv::line(traControl,this->data[i].position[j],this->data[i].position[j+1],lineColor,3);
+                    }
+                }
+            }
+            else
+            {
+
+                for(int j = 0;j < this->data[i].position.size(); j++)
+                {
+                    if(this->data[i].position[j].x >= 3600 ||this->data[i].position[j].y >= 1600)
+                    {
+                        //qDebug() << j << this->data[i].position[j].x << this->data[i].position[j].y;
+                    }
+                    else
+                    {
+                        experimentCount++;
+                        //                        if(srcExperiment.at<uchar>(data[i].position[j].y,data[i].position[j].x) < 256-cVal)
+                        srcExperiment.at<uchar>(this->data[i].position[j])+= cVal;
+                        if(j < this->data[i].position.size()-1)
+                            cv::line(traExperiment,this->data[i].position[j],this->data[i].position[j+1],lineColor,3);
+                    }
+                }
+            }
+        }
+        cv::resize(srcControl,srcControl,cv::Size(srcControl.cols/2,srcControl.rows/2));
+        cv::resize(srcExperiment,srcExperiment,cv::Size(srcExperiment.cols/2,srcExperiment.rows/2));
+
+
+        cv::Mat dstControl,dstExperiment;
+        cv::applyColorMap(srcControl,dstControl,cv::COLORMAP_JET);
+        cv::applyColorMap(srcExperiment,dstExperiment,cv::COLORMAP_JET);
+
+        cv::imshow("dstControl",dstControl);
+        cv::imshow("dstExperiment",dstExperiment);
+        QDir outInfo("out/bee_info");
+        if(!outInfo.exists())
+        {
+            outInfo.cdUp();
+            outInfo.mkdir("bee_info");
+            outInfo.cd("bee_info");
+        }
+        cv::String dstName;
+        dstName = (outInfo.absolutePath()+"/dstControl.jpg").toStdString();
+        cv::imwrite(dstName,dstControl);
+        dstName = (outInfo.absolutePath()+"/dstExperiment.jpg").toStdString();
+        cv::imwrite(dstName,dstExperiment);
+
+        dstName = (outInfo.absolutePath()+"/traControl.jpg").toStdString();
+        cv::imwrite(dstName,traControl);
+        dstName = (outInfo.absolutePath()+"/traExperiment.jpg").toStdString();
+        cv::imwrite(dstName,traExperiment);
+
+    }
 }

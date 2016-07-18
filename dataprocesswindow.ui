@@ -478,6 +478,32 @@ Remove Outlier</string>
      </property>
     </widget>
    </widget>
+   <widget class="QPushButton" name="sub_group_distributed_area_pushButton">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>390</y>
+      <width>301</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Sub-Group Distributed Area</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="target_list_lineEdit">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>390</y>
+      <width>281</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
