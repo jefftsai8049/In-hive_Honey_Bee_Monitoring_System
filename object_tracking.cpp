@@ -717,20 +717,24 @@ int object_tracking::direction(const QVector<cv::Point> &motion,const objectTrac
 
 void object_tracking::rawDataPreprocessing(const std::vector<track> *path, QVector<trackPro> *TPVector)
 {
+    //trajectory preprocessing
     TPVector->clear();
     for(int i = 0; i < path->size(); i++)
     {
         trackPro TP;
+        //voting algorithm to choose ID of the trajectory
         TP.ID = this->voting(path->at(i));
+
+        //remove recognize failed ID
         if(TP.ID.at(0)!='!' && TP.ID.at(1)!='!')
         {
             TP.startTime = path->at(i).time[0];
             TP.endTime = path->at(i).time[path->at(i).time.size()-1];
-//            TP.position = QVector<cv::Point>::fromStdVector(path->at(i).position);
             TP.position = this->interpolation(path->at(i).position,path->at(i).time);
             TP.size = TP.position.size();
             TPVector->append(TP);
         }
+        //send processing progress to ui and show
         emit sendProgress((i+1)*100/path->size());
     }
 

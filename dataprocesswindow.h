@@ -118,7 +118,7 @@ private slots:
 
     void setObjectTrackingParameters(const objectTrackingParameters &params);
 
-    void pseudoColor(const cv::Mat &src,cv::Mat &dst);
+//    void pseudoColor(const cv::Mat &src,cv::Mat &dst);
 
     void on_actionOpen_Processed_Data_triggered();
 
@@ -145,6 +145,12 @@ private slots:
     void on_actionOpen_In_Out_Data_triggered();
 
     void on_sub_group_distributed_area_pushButton_clicked();
+
+    void on_actionDaily_Infomation_triggered();
+
+    void on_actionDaily_Trajectory_Analysis_triggered();
+
+    void on_actionHouly_Compare_triggered();
 
 private:
     Ui::DataProcessWindow *ui;

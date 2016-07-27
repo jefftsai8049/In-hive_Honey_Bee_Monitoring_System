@@ -25,7 +25,7 @@
 //
 //
 //********************************************************************
-//本程式為R03 蔡靜偉 的碩士研究 應用蜜蜂箱內影像影像系統於蜜蜂年齡多變性分析
+//本程式為R03 蔡靜偉 的碩士研究 應用蜜蜂箱內影像影像系統於蜜蜂行為分析
 //
 //主要功能為將影片檔轉換成為蜜蜂軌跡與ID，並且分析其特徵等
 //
@@ -805,14 +805,17 @@ void MainWindow::on_erase__ten_pushButton_clicked()
 
 void MainWindow::on_show_text_checkBox_clicked()
 {
+    //show text ID in ui image window?
     TT->setShowText(ui->show_text_checkBox->isChecked());
 }
 
 void MainWindow::on_text_system_comboBox_currentIndexChanged(const QString &arg1)
 {
+    //change text system
     TT->setTextSystem(arg1);
     emit sendSystemLog("Change text system into "+arg1);
 
+    //check mode file exist and load
     if(arg1 == "SUTM")
     {
         if(SVMModel_SUTM.exists())
@@ -838,6 +841,7 @@ void MainWindow::on_text_system_comboBox_currentIndexChanged(const QString &arg1
 
 void MainWindow::on_actionRecord_Process_Procedure_triggered()
 {
+    //record video from ui image window
     if(ui->actionRecord_Process_Procedure->isChecked())
     {
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save Video File"),"record.avi",tr("Video (*.avi)"));
@@ -852,5 +856,6 @@ void MainWindow::on_actionRecord_Process_Procedure_triggered()
 
 void MainWindow::on_show_trajectory_checkBox_clicked()
 {
+    //show trajectory in ui image window?
     TT->setShowTrajectory(ui->show_trajectory_checkBox->isChecked());
 }

@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_4">
      <attribute name="title">
@@ -288,9 +288,9 @@
      <widget class="QPushButton" name="erase_pushButton">
       <property name="geometry">
        <rect>
-        <x>210</x>
+        <x>200</x>
         <y>90</y>
-        <width>91</width>
+        <width>101</width>
         <height>31</height>
        </rect>
       </property>

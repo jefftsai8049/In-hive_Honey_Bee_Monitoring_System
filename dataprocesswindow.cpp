@@ -12,10 +12,13 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     OTS = new ObjectTrackingForm;
     WL = new WhiteList;
 
+    //connect system log recorder and show
     connect(this,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
-
+    //connect OT class system log to log recorder and show
     connect(OT,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
+    //
     connect(OT,SIGNAL(sendLoadRawDataFinish()),this,SLOT(receiveLoadDataFinish()));
+    //connect processing progress bar to ui
     connect(OT,SIGNAL(sendProgress(int)),this,SLOT(receiveProgress(int)));
 
     connect(OTS,SIGNAL(setObjectTrackingParameters(objectTrackingParameters)),this,SLOT(setObjectTrackingParameters(objectTrackingParameters)));
@@ -48,7 +51,6 @@ void DataProcessWindow::on_data_preprocessing_pushButton_clicked()
     this->path.clear();
 
     //set next button enable
-    //    ui->trajectory_classify_pushButton->setEnabled(true);
     ui->white_list_smoothing_pushButton->setEnabled(true);
 
 
@@ -71,6 +73,7 @@ void DataProcessWindow::receiveProgress(const int &val)
 
 void DataProcessWindow::receiveWhiteList(const QStringList &controlWhiteList, const QStringList &experimentWhiteList)
 {
+    //show white list on ui
     this->controlWhiteList = controlWhiteList;
     this->experimentWhiteList = experimentWhiteList;
     QString msg = "White List : ";
@@ -83,45 +86,46 @@ void DataProcessWindow::receiveWhiteList(const QStringList &controlWhiteList, co
 
 void DataProcessWindow::setObjectTrackingParameters(const objectTrackingParameters &params)
 {
+    //receive object trajectory parameters from OTS ui
     OTParams = params;
     OT->setPathSegmentSize(this->OTParams.segmentSize);
-
+    //send system log
     emit sendSystemLog("Object tracking parameters set!");
 }
 
-void DataProcessWindow::pseudoColor(const cv::Mat &src, cv::Mat &dst)
-{
-    cv::Mat srcGray = src.clone();
-    //cv::cvtColor(src,srcGray,CV_GRAY2BGR);
-    cv::Mat HSI;
-    HSI.create(srcGray.rows,srcGray.cols,CV_32FC3);
-    for(int i=0;i<srcGray.rows;i++)
-    {
-        for(int j=0;j<srcGray.cols;j++)
-        {
-            double val =srcGray.at<uchar>(i,j);
-            HSI.at<cv::Vec3f>(i,j)[0] = val/255.0*360.0;
-            HSI.at<cv::Vec3f>(i,j)[1] = 1;
-            HSI.at<cv::Vec3f>(i,j)[2] = 1;
-        }
-    }
-    //    //using HSI to convert gray to colcor image
-    //    cv::cvtColor(HSI,dst,cv::COLOR_HSV2BGR);
-    //    cv::Mat reference;
-    //    reference.create(100,600,CV_32FC3);
-    //    for(int m=0;m<reference.rows;m++)
-    //    {
-    //        for(int n=0;n<reference.cols;n++)
-    //        {
-    //            double val =(double)n/(double)reference.cols;
-    //            reference.at<cv::Vec3f>(m,n)[0] = val*360.0;
-    //            reference.at<cv::Vec3f>(m,n)[1] = 1;
-    //            reference.at<cv::Vec3f>(m,n)[2] = 1;
-    //        }
-    //    }
-    //    cv::Mat reference_dst;
-    //    cv::cvtColor(reference,reference_dst,cv::COLOR_HSV2RGB);
-}
+//void DataProcessWindow::pseudoColor(const cv::Mat &src, cv::Mat &dst)
+//{
+//    cv::Mat srcGray = src.clone();
+//    //cv::cvtColor(src,srcGray,CV_GRAY2BGR);
+//    cv::Mat HSI;
+//    HSI.create(srcGray.rows,srcGray.cols,CV_32FC3);
+//    for(int i=0;i<srcGray.rows;i++)
+//    {
+//        for(int j=0;j<srcGray.cols;j++)
+//        {
+//            double val =srcGray.at<uchar>(i,j);
+//            HSI.at<cv::Vec3f>(i,j)[0] = val/255.0*360.0;
+//            HSI.at<cv::Vec3f>(i,j)[1] = 1;
+//            HSI.at<cv::Vec3f>(i,j)[2] = 1;
+//        }
+//    }
+//    //    //using HSI to convert gray to colcor image
+//    //    cv::cvtColor(HSI,dst,cv::COLOR_HSV2BGR);
+//    //    cv::Mat reference;
+//    //    reference.create(100,600,CV_32FC3);
+//    //    for(int m=0;m<reference.rows;m++)
+//    //    {
+//    //        for(int n=0;n<reference.cols;n++)
+//    //        {
+//    //            double val =(double)n/(double)reference.cols;
+//    //            reference.at<cv::Vec3f>(m,n)[0] = val*360.0;
+//    //            reference.at<cv::Vec3f>(m,n)[1] = 1;
+//    //            reference.at<cv::Vec3f>(m,n)[2] = 1;
+//    //        }
+//    //    }
+//    //    cv::Mat reference_dst;
+//    //    cv::cvtColor(reference,reference_dst,cv::COLOR_HSV2RGB);
+//}
 
 void DataProcessWindow::on_actionOpen_Raw_Data_triggered()
 {
@@ -134,6 +138,7 @@ void DataProcessWindow::on_actionOpen_Raw_Data_triggered()
     ui->test_pushButton->setEnabled(false);
     ui->motion_pattern_filterpushButton->setEnabled(false);
 
+    //load raw processing data
     QStringList fileNames;
     fileNames = QFileDialog::getOpenFileNames(this,"Open Data File","","Data Files (*.csv)");
     if(fileNames.size() == 0)
@@ -145,13 +150,10 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 {
     QString fileName;
     fileName = QFileDialog::getOpenFileName(this,"Open Data File","","Data Files (*.csv)");
-
     if(fileName.size() == 0)
         return;
     QFuture<void> loadDataTrackPro = QtConcurrent::run(OT,&object_tracking::loadDataTrackPro,fileName,&this->data);
-    //OT->loadDataTrackPro(fileName,&this->data);
     loadDataTrackPro.waitForFinished();
-    //qDebug() << this->data.size();
 
     ui->trajectory_classify_pushButton->setEnabled(true);
     ui->white_list_smoothing_pushButton->setEnabled(true);
@@ -167,7 +169,6 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     OT->tracjectoryClassify(this->data,this->OTParams);
 
     //group pattern count and ratio
-
     QVector<QStringList> infoID;
     infoID << this->controlWhiteList << this->experimentWhiteList;
     QVector< QVector<double> > infoRatio;
@@ -203,8 +204,8 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     PCA_2D = new cv::PCA(PCAData,cv::Mat(),cv::PCA::DATA_AS_ROW,dims);
     PCAData = PCA_2D->project(PCAData);
     cv::normalize(PCAData,PCAData,0,1,cv::NORM_MINMAX);
-    //qDebug() << PCA_2D->eigenvalues.cols << PCA_2D->eigenvalues.rows;
 
+    //check folder exist or not
     QDir outInfo("out/bee_info");
     if(!outInfo.exists())
     {
@@ -234,7 +235,6 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 
     for(int i = 0; i < individualInfoRatio.size(); i++)
     {
-        //qDebug() << individualInfoID[i] << individualInfoRatio[i];
         out << individualInfoID[i] << ",";
         for(int j = 0; j < PATTERN_TYPES; j++)
         {
@@ -327,6 +327,7 @@ void DataProcessWindow::on_actionObject_Tracking_triggered()
 
 void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
 {
+    //load sensor data
     QStringList fileNames;
     fileNames = QFileDialog::getOpenFileNames(this,"Open Sensor File","","Data Files (*.csv)");
 
@@ -339,6 +340,7 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
     {
         ui->system_log_textBrowser->insertPlainText(errMsg);
     }
+
     //set title font size
     QFont font;
     font.setPointSize(14);
@@ -461,6 +463,7 @@ void DataProcessWindow::on_actionOpen_Sensor_Data_triggered()
 
 void DataProcessWindow::loadWeatherData(const QStringList &fileNames, QVector<weatherInfo> &weatherData)
 {
+    //load weather data
     weatherData.clear();
     for(int i = 0; i < fileNames.size(); i++)
     {
@@ -1045,14 +1048,14 @@ void DataProcessWindow::on_mdl_pushButton_clicked()
 
 void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 {
-    //set button
-    ui->white_list_smoothing_pushButton->setEnabled(false);
-
     //if without setting whitelist
     if((this->controlWhiteList+this->experimentWhiteList).isEmpty())
         WL->exec();
     if((this->controlWhiteList+this->experimentWhiteList).isEmpty())
         return;
+
+    //set button
+    ui->white_list_smoothing_pushButton->setEnabled(false);
 
     //white list filter
     emit sendSystemLog("before white list filter : "+QString::number(this->data.size()));
@@ -1548,19 +1551,24 @@ void DataProcessWindow::on_c_value_spinBox_valueChanged(int arg1)
 
 void DataProcessWindow::on_motion_pattern_filterpushButton_clicked()
 {
+    //motion pattern filter
+
+    //check file exist or not
     QFile inFile;
     inFile.setFileName("out/bee_info/motion_pattern_count.csv");
     inFile.open(QIODevice::ReadOnly);
-
     if(!inFile.exists())
     {
-        qDebug() <<"GG";
+        emit sendSystemLog(inFile.fileName()+" not exist!");
         return;
     }
 
+    //open new file
     QFile outFile;
     outFile.setFileName("out/bee_info/motion_pattern_count_filter.csv");
     outFile.open(QIODevice::WriteOnly);
+
+
     QVector<double> sumList;
     sumList.clear();
     QVector<double> SRList;
@@ -1791,6 +1799,8 @@ void DataProcessWindow::on_actionOpen_In_Out_Data_triggered()
 
 void frameDetected::getInteractions(QVector<int> &interaction, const double &distanceThreshold)
 {
+    //calculate highly interaction honeybee
+
     interaction.clear();
     for(int m = 0; m < this->IDList.size()-1; m++)
     {
@@ -1909,4 +1919,49 @@ void DataProcessWindow::on_sub_group_distributed_area_pushButton_clicked()
         cv::imwrite(dstName,traExperiment);
 
     }
+}
+
+void DataProcessWindow::on_actionDaily_Infomation_triggered()
+{
+    QString fileName = "'bee_info_5_new/all/dailyInfo.csv'";
+
+    QString defaultCMD = "matlab -nodesktop -nosplash -r ";
+    QString changeCMD = "cd analysis;";
+    QString parameterCMD = "fileName="+fileName+";";
+    QString functionCMD = "dailyInfo;";
+
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+functionCMD+'"';
+
+    QProcess process;
+    process.execute(outputCMD);
+}
+
+void DataProcessWindow::on_actionDaily_Trajectory_Analysis_triggered()
+{
+    QString fileName = "'bee_info_5_new/all/trajecotry_info.csv'";
+
+    QString defaultCMD = "matlab -nodesktop -nosplash -r ";
+    QString changeCMD = "cd analysis;";
+    QString parameterCMD = "fileName="+fileName+";";
+    QString functionCMD = "trajectory_analysis;";
+
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+functionCMD+'"';
+
+    QProcess process;
+    process.execute(outputCMD);
+}
+
+void DataProcessWindow::on_actionHouly_Compare_triggered()
+{
+    QString fileName = "'bee_info_5_new/all/trajectory_info.csv'";
+
+    QString defaultCMD = "matlab -nodesktop -nosplash -r ";
+    QString changeCMD = "cd analysis;";
+    QString parameterCMD = "fileName="+fileName+";";
+    QString functionCMD = "hours_compare;";
+
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+functionCMD+'"';
+
+    QProcess process;
+    process.execute(outputCMD);
 }
