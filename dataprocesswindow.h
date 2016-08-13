@@ -152,6 +152,20 @@ private slots:
 
     void on_actionHouly_Compare_triggered();
 
+    void on_action2D_PCA_Plot_triggered();
+
+    void on_action3D_Motion_Pattern_Plot_triggered();
+
+    void on_open_script_pushButton_clicked();
+
+    void on_save_script_pushButton_clicked();
+
+    void on_interaction_matrix_pushButton_clicked();
+
+    void on_trajectory_behavior_classifier_pushButton_clicked();
+
+    void on_test2_pushButton_clicked();
+
 private:
     Ui::DataProcessWindow *ui;
 
@@ -160,6 +174,8 @@ private:
     object_tracking *OT;
 
     WhiteList *WL;
+
+    QProcess *process;
 
     std::vector<track> path;
 
@@ -212,6 +228,10 @@ private:
     void outBeeBehaviorInfo(QVector<trackPro> &data);
 
     void loadColorTable(const QString &fileName,QVector< cv::Scalar > &colorTable);
+
+    QVector<double> movingAVG(const QVector<double> &raw,const int &length);
+
+    QVector<int> trajectoryClassifier(const QVector<double> &raw, const double &staticThreshold, const double &loiteringThreshold);
 
 signals:
     void sendSystemLog(const QString &log);

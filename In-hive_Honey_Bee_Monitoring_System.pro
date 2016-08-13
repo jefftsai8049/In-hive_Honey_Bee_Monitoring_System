@@ -18,6 +18,8 @@ DEFINES += HAVE_OPENCV \
 #        += DEBUG_OBJECT_TRACKING \
         NO_OCL \
 #        += SHOW_PATTERN_NAME
+#        DEBUG_BEHAVIOR_CLASSIFIER \
+#        RECORD_BEHAVIOR_CLASSIFIER \
 
 
 SOURCES += main.cpp\

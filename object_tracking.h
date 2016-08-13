@@ -16,12 +16,15 @@
 
 #include "math_function.h"
 
-
+//Parameters
+#define IMAGE_SIZE_X 1200
+#define IMAGE_SIZE_Y 1600
 #define REMAIN_SIZE 20
 #define FORGET_TRACKING_TIME 20
 #define SHORTEST_SAMPLE_SIZE 5
 #define MIN_FPS 8.0
 #define PATTERN_TYPES 9
+#define PATTERN_TYPES_BEHAVIOR 3
 
 #define DIRECTION_THRESHOLD 30.0
 
@@ -34,7 +37,8 @@ enum pattern{
     WAGGLE,
     INTERACTION,
     FORAGING,
-    OTHER
+    OTHER,
+    MOVING
 };
 
 struct objectTrackingParameters
@@ -71,11 +75,16 @@ struct trackPro
     int size;
     QVector<cv::Point> position;
     QVector<int> pattern;
+    QVector<int> pattern3D;
 
     QVector<int> criticalPointIndex;
 
+    QVector<int> trajectoryPattern;
+    QVector<double> distanceP2P;
+
     QVector<double> getPatternCount();
     cv::Mat getTrajectoryPlot(const cv::Mat &src);
+    cv::Mat getTrajectoryPlotPart(const cv::Mat &src, int from, int end);
     cv::Mat getCriticalPointPlot(const cv::Mat &src);
 
     double getTrajectoryMovingDistance();
@@ -84,6 +93,8 @@ struct trackPro
     double getLoiteringTime();
     double getMovingTime();
     double getDetectedTime();
+    QVector<double> getMovingDistanceP2P();
+    cv::Rect getROI();
 };
 
 
@@ -128,7 +139,9 @@ public:
 
     void tracjectoryWhiteList(QVector<trackPro> &data,const QStringList &whiteList);
 
-    void tracjectoryClassify(QVector<trackPro> &path,const objectTrackingParameters params);
+    void trajectoryClassify(QVector<trackPro> &path,const objectTrackingParameters params);
+
+    void trajectoryClassify3D(QVector<trackPro> &path,const objectTrackingParameters params);
 
     QString tracjectoryName(const char &pattern);
 

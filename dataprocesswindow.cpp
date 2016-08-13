@@ -32,6 +32,9 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
 
 
     loadColorTable("model/color_table.csv",this->colorTable);
+
+    //new a QProcess for running matlab script
+    process = new QProcess(this);
 }
 
 DataProcessWindow::~DataProcessWindow()
@@ -166,7 +169,9 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
     //pattern classification
-    OT->tracjectoryClassify(this->data,this->OTParams);
+    OT->trajectoryClassify(this->data,this->OTParams);
+    //    OT->trajectoryClassify3D(this->data,this->OTParams);
+
 
     //group pattern count and ratio
     QVector<QStringList> infoID;
@@ -174,10 +179,10 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     QVector< QVector<double> > infoRatio;
     this->getGroupBeePatternRation(this->data,infoID,infoRatio);
 
-    for(int i = 0; i < infoID.size(); i++)
-    {
-        qDebug() << infoID[i] << infoRatio[i];
-    }
+    //    for(int i = 0; i < infoID.size(); i++)
+    //    {
+    //        qDebug() << infoID[i] << infoRatio[i];
+    //    }
 
     //individual pattern ratio
     QStringList individualInfoID;
@@ -1025,6 +1030,84 @@ void DataProcessWindow::loadColorTable(const QString &fileName, QVector<cv::Scal
 
 }
 
+QVector<double> DataProcessWindow::movingAVG(const QVector<double> &raw, const int &length)
+{
+    QVector<double> weigth;
+    for(int i = 0; i < length;i++)
+    {
+        double val = 1.0/(double)length;
+        weigth.append(val);
+    }
+    QVector<double> out;
+    for(int i = 0; i < raw.size()-length+1; i++)
+    {
+        double sum = 0;
+        for(int j = 0; j < length; j++)
+        {
+            sum += raw[i+j]*weigth[j];
+        }
+        //sum /= length;
+        out.append(sum);
+    }
+    return out;
+}
+
+QVector<int> DataProcessWindow::trajectoryClassifier(const QVector<double> &raw, const double &staticThreshold, const double &loiteringThreshold)
+{
+    QVector<double> distanceP2P_AVG = this->movingAVG(raw,24);
+
+    QVector<int> out;
+    for(int i = 0; i < raw.size();i++)
+    {
+        if(i < distanceP2P_AVG.size())
+        {
+            if(distanceP2P_AVG[i] < staticThreshold)
+            {
+                out.append(0);
+            }
+            else if(distanceP2P_AVG[i] >= staticThreshold && distanceP2P_AVG[i] < loiteringThreshold)
+            {
+                out.append(1);
+            }
+            else if(distanceP2P_AVG[i] >= loiteringThreshold)
+            {
+                out.append(2);
+            }
+        }
+        else
+        {
+            out.append(out[out.size()-1]);
+        }
+    }
+
+
+    for(int i = 2; i < out.size()-3;i++)
+    {
+        QVector<int> vote(3);
+        for(int j = -2; j < 3;j++)
+        {
+            //            qDebug() << out[i+j];
+            vote[out[i+j]]++;
+        }
+        //        qDebug() << vote;
+        int winner = -1;
+        int max = 0;
+        for(int k = 0; k < vote.size();k++)
+        {
+
+            if(vote[k] > max)
+            {
+                max = vote[k];
+                winner = k;
+            }
+        }
+
+        out[i] = winner;
+    }
+
+    return out;
+}
+
 void DataProcessWindow::on_actionWhite_List_triggered()
 {
     WL->show();
@@ -1192,6 +1275,8 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     ui->distributed_area_pushButton->setEnabled(true);
     ui->mdl_pushButton->setEnabled(true);
     ui->test_pushButton->setEnabled(true);
+    ui->test2_pushButton->setEnabled(true);
+    ui->trajectory_behavior_classifier_pushButton->setEnabled(true);
 
 
 
@@ -1199,250 +1284,20 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
 void DataProcessWindow::on_test_pushButton_clicked()
 {
-    QTime t;
-    t.start();
-    //calculate frame by frame detected honeybee
-    QVector<frameDetected> frames;
+    QFile file;
+    file.setFileName("trajectory_distance.csv");
+    file.open(QIODevice::WriteOnly);
+    QTextStream out(&file);
 
-    //start time scan
-    QDateTime startTime = this->data[0].startTime;
-    for(int i = 1; i < this->data.size(); i++)
-    {
-        static int count = 0;
-        if(startTime.msecsTo(this->data[i].startTime) < 0)
-            startTime = this->data[i].startTime;
-        else
-            count++;
-        if(count > 1000)
-            break;
-    }
-    qDebug () << "1" << t.elapsed();
-    QDateTime endTime = this->data[this->data.size()-1].endTime;
-    double timeDelta = startTime.msecsTo(endTime);
-    double frameSize = timeDelta/1000.0*12.0;
-    frames.resize((int)frameSize+1);
-
-    for(int i = 0; i < (int)frameSize+1; i++)
-    {
-        frames[i].time = startTime.addMSecs(1000.0/12.0*i);
-    }
-
-    int lastPosition = 0;
     for(int i = 0; i < this->data.size(); i++)
     {
-        double progress = (double)i/(double)this->data.size()*100.0;
-        //        if((int)progress%10 == 0)
-        qDebug() << progress;
-
-
-        int frameID = 0;
-        int j;
-        if(lastPosition-this->data[i].size < 0)
-            j = 0;
-        else
-            j = lastPosition-this->data[i].size;
-
-        int timeGap = this->data[i].startTime.msecsTo(frames[j].time);
-        if(timeGap > 1000.0/12.0)
-            j += timeGap/(1000.0/12.0);
-
-
-        for(;j < frames.size()-1; j++)
+        for(int j = 0; j < this->data[i].distanceP2P.size();j++)
         {
-            int timeGapb = this->data[i].startTime.msecsTo(frames[j].time);
-            int timeGapa = this->data[i].startTime.msecsTo(frames[j+1].time);
-            if(abs(timeGapa) < 1000.0/12.0/2.0)
-            {
-                frameID = j;
-                lastPosition = frameID;
-                break;
-            }
-            else if(abs(timeGapb) < 1000.0/12.0/2.0)
-            {
-                frameID = j+1;
-                lastPosition = frameID;
-                break;
-            }
-            else
-            {
-                if(timeGapb < 0 && timeGapa > 0)
-                {
-                    frameID = j;
-                    lastPosition = frameID;
-                    break;
-                }
-            }
-
+            out << this->data[i].distanceP2P[j] << ",";
+            //        if(this->data[i].)
         }
-        //        qDebug () << "2" << t.elapsed();
-        //        qDebug() << i << frameID << this->data[i].size << frames.size() << frames[frameID].time <<endTime;
-        for(int j = 0; j < this->data[i].size;j++)
-        {
-            if(j+frameID < frames.size())
-            {
-                if(!frames[frameID+j].IDList.contains(this->data[i].ID))
-                {
-                    frames[frameID+j].IDList.append(this->data[i].ID);
-                    frames[frameID+j].positionList.append(this->data[i].position[j]);
-                }
-            }
-        }
-        //        qDebug () << "2.1" << t.elapsed();
+
     }
-
-    qDebug () << "3" << t.elapsed();
-    for(int i = 0; i < frames.size(); i++)
-    {
-        QVector<int> interaction;
-        frames[i].getInteractions(interaction,100);
-        //        if(interaction.size() > 0)
-        //            qDebug() << interaction << frames[i].IDList;
-    }
-
-    qDebug () << "4" << t.elapsed();
-    //plot interaction
-    QStringList IDList;
-    for(int i = 0; i < frames.size();i++)
-    {
-        for(int j = 0; j < frames[i].IDList.size(); j++)
-        {
-            if(!IDList.contains(frames[i].IDList[j]))
-            {
-                IDList.append(frames[i].IDList[j]);
-            }
-        }
-    }
-    qDebug () << "5" << t.elapsed();
-    cv::Mat interactionMat;
-    interactionMat = cv::Mat::zeros(IDList.size(),IDList.size(),CV_8UC1);
-
-    for(int i = 0; i < frames.size();i++)
-    {
-        //        if(frames.size()/i*100%10 == 0)
-        //                qDebug() << i <<  frames.size();
-
-        for(int j = 0; j < frames[i].interactionID.size(); j+=2)
-        {
-            QString IDA = frames[i].IDList[frames[i].interactionID[j]];
-            QString IDB = frames[i].IDList[frames[i].interactionID[j+1]];
-
-
-            int m = IDList.indexOf(IDA);
-            int n = IDList.indexOf(IDB);
-            if(m>n)
-            {
-                int temp = m;
-                m = n;
-                n = temp;
-            }
-            if(interactionMat.at<uchar>(m,n) < 255)
-                interactionMat.at<uchar>(m,n)++;
-        }
-    }
-    //sort mat
-    QStringList IDListRow = IDList;
-    QStringList IDListCol = IDList;
-    for(int i = 0; i < interactionMat.rows;i++)
-    {
-        for(int m = i+1; m < interactionMat.cols-1; m++)
-        {
-            for(int n = m+1; n < interactionMat.cols;n++)
-            {
-                int sumM = 0;
-                int sumN = 0;
-                for(int k = 0; k < interactionMat.cols; k++)
-                {
-                    sumM += interactionMat.at<uchar>(k,m);
-                    sumN += interactionMat.at<uchar>(k,n);
-                }
-                if(sumM < sumN)
-                {
-                    for(int k = 0; k < interactionMat.cols; k++)
-                    {
-                        uchar temp = interactionMat.at<uchar>(k,m);
-                        interactionMat.at<uchar>(k,m) = interactionMat.at<uchar>(k,n);
-                        interactionMat.at<uchar>(k,n) = temp;
-                    }
-                    IDListCol.swap(m,n);
-                }
-            }
-        }
-    }
-
-    for(int i = 0; i < interactionMat.cols;i++)
-    {
-        for(int m = i+1; m < interactionMat.rows-1; m++)
-        {
-            for(int n = m+1; n < interactionMat.rows;n++)
-            {
-                int sumM = 0;
-                int sumN = 0;
-                for(int k = 0; k < interactionMat.rows; k++)
-                {
-                    sumM += interactionMat.at<uchar>(m,k);
-                    sumN += interactionMat.at<uchar>(n,k);
-                }
-                if(sumM < sumN)
-                {
-                    for(int k = 0; k < interactionMat.rows; k++)
-                    {
-                        uchar temp = interactionMat.at<uchar>(m,k);
-                        interactionMat.at<uchar>(m,k) = interactionMat.at<uchar>(n,k);
-                        interactionMat.at<uchar>(n,k) = temp;
-                    }
-                    IDListRow.swap(m,n);
-                }
-            }
-        }
-    }
-
-
-
-    qDebug () << "6" << t.elapsed();
-    int scaleSize = 20;
-    cv::Mat interactionMatBig;
-    cv::resize(interactionMat,interactionMatBig,cv::Size(interactionMat.cols*scaleSize,interactionMat.rows*scaleSize),0,0,cv::INTERSECT_NONE);
-
-
-    cv::copyMakeBorder(interactionMatBig,interactionMatBig,scaleSize,0,scaleSize,0,cv::BORDER_CONSTANT,cv::Scalar(20));
-    cv::applyColorMap(interactionMatBig,interactionMatBig,cv::COLORMAP_JET);
-
-    if(!inOutIDList.empty())
-    {
-        for(int i = 0; i < IDList.size();i++)
-        {
-            if(inOutIDList.contains(IDListCol[i]))
-            {
-                cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,255));
-            }
-
-            else
-            {
-                cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
-            }
-
-            if(inOutIDList.contains(IDListRow[i]))
-            {
-                cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,255));
-            }
-            else
-            {
-                cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
-            }
-        }
-    }
-    else
-    {
-        for(int i = 0; i < IDList.size();i++)
-        {
-            cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
-            cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
-        }
-    }
-    qDebug () << "7" << t.elapsed();
-    cv::imshow("interaction",interactionMatBig);
-    cv::imwrite("out/bee_info/interaction.jpg",interactionMatBig);
-
 }
 
 void DataProcessWindow::on_distributed_area_pushButton_clicked()
@@ -1829,11 +1684,11 @@ void DataProcessWindow::on_sub_group_distributed_area_pushButton_clicked()
         QStringList targetList;
         targetList = targetStr.split(";");
         qDebug() << targetList;
-//        targetList  << "AA" << "AC" << "AG" << "AL" << "AP" << "AR" << "AT" << "AV" << "BB" << "BF"
-//                    << "BH" << "BO" << "BP" << "BP" << "BR" << "BT" << "BY" << "BZ" << "CF" << "CH"
-//                    << "CR" << "CP" << "CT" << "CG" << "CZ" << "EB" << "EG" << "DA" << "FB" << "FE"
-//                    << "FF" << "FC" << "FG" << "FH" << "FL" << "FK" << "FR" << "FT" << "FY" << "GA"
-//                    << "GB" << "GC" << "GF" << "GK" << "GP" << "GO" << "GT" << "GZ";
+        //        targetList  << "AA" << "AC" << "AG" << "AL" << "AP" << "AR" << "AT" << "AV" << "BB" << "BF"
+        //                    << "BH" << "BO" << "BP" << "BP" << "BR" << "BT" << "BY" << "BZ" << "CF" << "CH"
+        //                    << "CR" << "CP" << "CT" << "CG" << "CZ" << "EB" << "EG" << "DA" << "FB" << "FE"
+        //                    << "FF" << "FC" << "FG" << "FH" << "FL" << "FK" << "FR" << "FT" << "FY" << "GA"
+        //                    << "GB" << "GC" << "GF" << "GK" << "GP" << "GO" << "GT" << "GZ";
 
         cv::Mat srcControl;
         srcControl = srcControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
@@ -1923,45 +1778,649 @@ void DataProcessWindow::on_sub_group_distributed_area_pushButton_clicked()
 
 void DataProcessWindow::on_actionDaily_Infomation_triggered()
 {
-    QString fileName = "'bee_info_5_new/all/dailyInfo.csv'";
+    QFile file;
+    file.setFileName("out/bee_info/dailyInfo.csv");
+    if(!file.exists())
+    {
+        emit sendSystemLog("File not found!");
+        return;
+    }
+
+    QString fileName = "'../out/bee_info/dailyInfo.csv'";
 
     QString defaultCMD = "matlab -nodesktop -nosplash -r ";
     QString changeCMD = "cd analysis;";
     QString parameterCMD = "fileName="+fileName+";";
     QString functionCMD = "dailyInfo;";
 
-    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+functionCMD+'"';
+    QString controlLegend = "controlLegendName='"+ui->control_legend_lineEdit->text()+"';";
+    QString experimentLegend = "experimentLegendName='"+ui->experiment_legend_lineEdit->text()+"';";
 
-    QProcess process;
-    process.execute(outputCMD);
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+functionCMD+'"';
+
+
+    process->execute(outputCMD);
 }
 
 void DataProcessWindow::on_actionDaily_Trajectory_Analysis_triggered()
 {
-    QString fileName = "'bee_info_5_new/all/trajecotry_info.csv'";
+    QFile file;
+    file.setFileName("out/bee_info/trajectory_info.csv");
+    if(!file.exists())
+    {
+        emit sendSystemLog("File not found!");
+        return;
+    }
+
+    QString fileName = "'../out/bee_info/trajectory_info.csv'";
 
     QString defaultCMD = "matlab -nodesktop -nosplash -r ";
     QString changeCMD = "cd analysis;";
     QString parameterCMD = "fileName="+fileName+";";
     QString functionCMD = "trajectory_analysis;";
 
-    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+functionCMD+'"';
+    QString controlLegend = "controlLegendName='"+ui->control_legend_lineEdit->text()+"';";
+    QString experimentLegend = "experimentLegendName='"+ui->experiment_legend_lineEdit->text()+"';";
 
-    QProcess process;
-    process.execute(outputCMD);
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+functionCMD+'"';
+
+    process->execute(outputCMD);
 }
 
 void DataProcessWindow::on_actionHouly_Compare_triggered()
 {
-    QString fileName = "'bee_info_5_new/all/trajectory_info.csv'";
+    QFile file;
+    file.setFileName("out/bee_info/trajectory_info.csv");
+    if(!file.exists())
+    {
+        emit sendSystemLog("File not found!");
+        return;
+    }
+
+    QString fileName = "'../out/bee_info/trajectory_info.csv'";
 
     QString defaultCMD = "matlab -nodesktop -nosplash -r ";
     QString changeCMD = "cd analysis;";
     QString parameterCMD = "fileName="+fileName+";";
     QString functionCMD = "hours_compare;";
 
-    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+functionCMD+'"';
+    QString controlLegend = "controlLegendName='"+ui->control_legend_lineEdit->text()+"';";
+    QString experimentLegend = "experimentLegendName='"+ui->experiment_legend_lineEdit->text()+"';";
 
-    QProcess process;
-    process.execute(outputCMD);
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+functionCMD+'"';
+
+    process->execute(outputCMD);
+
+}
+
+void DataProcessWindow::on_action2D_PCA_Plot_triggered()
+{
+
+    QFile file;
+    file.setFileName("out/bee_info/individual_PCA.csv");
+    if(!file.exists())
+    {
+        emit sendSystemLog("File not found!");
+        return;
+    }
+    QString fileName = "'../out/bee_info/individual_PCA.csv'";
+
+    QString defaultCMD = "matlab -nodesktop -nosplash -r ";
+    QString changeCMD = "cd analysis;";
+    QString parameterCMD = "fileName="+fileName+";";
+    QString functionCMD = "main;";
+
+    QString controlLegend = "controlLegendName='"+ui->control_legend_lineEdit->text()+"';";
+    QString experimentLegend = "experimentLegendName='"+ui->experiment_legend_lineEdit->text()+"';";
+
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+functionCMD+'"';
+
+    process->execute(outputCMD);
+}
+
+void DataProcessWindow::on_action3D_Motion_Pattern_Plot_triggered()
+{
+    QFile file;
+    file.setFileName("out/bee_info/individual_info.csv");
+    if(!file.exists())
+    {
+        emit sendSystemLog("File not found!");
+        return;
+    }
+    QString fileName = "'../out/bee_info/individual_info.csv'";
+
+    QString defaultCMD = "matlab -nodesktop -nosplash -r ";
+    QString changeCMD = "cd analysis;";
+    QString parameterCMD = "fileName="+fileName+";";
+    QString functionCMD = "PCA_3D;";
+
+    QString controlLegend = "controlLegendName='"+ui->control_legend_lineEdit->text()+"';";
+    QString experimentLegend = "experimentLegendName='"+ui->experiment_legend_lineEdit->text()+"';";
+
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+functionCMD+'"';
+
+    process->execute(outputCMD);
+}
+
+void DataProcessWindow::on_open_script_pushButton_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName();
+    QFile file;
+    file.setFileName(fileName);
+    if(!file.exists())
+    {
+        emit sendSystemLog("File no found!");
+        return;
+    }
+
+    file.open(QIODevice::ReadOnly);
+    QString script;
+    script = file.readAll();
+    ui->script_plainTextEdit->setPlainText(script);
+    ui->script_label->setText(fileName);
+}
+
+void DataProcessWindow::on_save_script_pushButton_clicked()
+{
+    //    QString script = ui->script_plainTextEdit
+}
+
+void DataProcessWindow::on_interaction_matrix_pushButton_clicked()
+{
+    QTime t;
+    t.start();
+    //calculate frame by frame detected honeybee
+    QVector<frameDetected> frames;
+
+    //start time scan
+    QDateTime startTime = this->data[0].startTime;
+    for(int i = 1; i < this->data.size(); i++)
+    {
+        static int count = 0;
+        if(startTime.msecsTo(this->data[i].startTime) < 0)
+            startTime = this->data[i].startTime;
+        else
+            count++;
+        if(count > 1000)
+            break;
+    }
+    qDebug () << "1" << t.elapsed();
+    QDateTime endTime = this->data[this->data.size()-1].endTime;
+    double timeDelta = startTime.msecsTo(endTime);
+    double frameSize = timeDelta/1000.0*12.0;
+    frames.resize((int)frameSize+1);
+
+    for(int i = 0; i < (int)frameSize+1; i++)
+    {
+        frames[i].time = startTime.addMSecs(1000.0/12.0*i);
+    }
+
+    int lastPosition = 0;
+    for(int i = 0; i < this->data.size(); i++)
+    {
+        double progress = (double)i/(double)this->data.size()*100.0;
+        //        if((int)progress%10 == 0)
+        qDebug() << progress;
+
+
+        int frameID = 0;
+        int j;
+        if(lastPosition-this->data[i].size < 0)
+            j = 0;
+        else
+            j = lastPosition-this->data[i].size;
+
+        int timeGap = this->data[i].startTime.msecsTo(frames[j].time);
+        if(timeGap > 1000.0/12.0)
+            j += timeGap/(1000.0/12.0);
+
+
+        for(;j < frames.size()-1; j++)
+        {
+            int timeGapb = this->data[i].startTime.msecsTo(frames[j].time);
+            int timeGapa = this->data[i].startTime.msecsTo(frames[j+1].time);
+            if(abs(timeGapa) < 1000.0/12.0/2.0)
+            {
+                frameID = j;
+                lastPosition = frameID;
+                break;
+            }
+            else if(abs(timeGapb) < 1000.0/12.0/2.0)
+            {
+                frameID = j+1;
+                lastPosition = frameID;
+                break;
+            }
+            else
+            {
+                if(timeGapb < 0 && timeGapa > 0)
+                {
+                    frameID = j;
+                    lastPosition = frameID;
+                    break;
+                }
+            }
+
+        }
+        //        qDebug () << "2" << t.elapsed();
+        //        qDebug() << i << frameID << this->data[i].size << frames.size() << frames[frameID].time <<endTime;
+        for(int j = 0; j < this->data[i].size;j++)
+        {
+            if(j+frameID < frames.size())
+            {
+                if(!frames[frameID+j].IDList.contains(this->data[i].ID))
+                {
+                    frames[frameID+j].IDList.append(this->data[i].ID);
+                    frames[frameID+j].positionList.append(this->data[i].position[j]);
+                }
+            }
+        }
+        //        qDebug () << "2.1" << t.elapsed();
+    }
+
+    qDebug () << "3" << t.elapsed();
+    for(int i = 0; i < frames.size(); i++)
+    {
+        QVector<int> interaction;
+        frames[i].getInteractions(interaction,100);
+        //        if(interaction.size() > 0)
+        //            qDebug() << interaction << frames[i].IDList;
+    }
+
+    qDebug () << "4" << t.elapsed();
+    //plot interaction
+    QStringList IDList;
+    for(int i = 0; i < frames.size();i++)
+    {
+        for(int j = 0; j < frames[i].IDList.size(); j++)
+        {
+            if(!IDList.contains(frames[i].IDList[j]))
+            {
+                IDList.append(frames[i].IDList[j]);
+            }
+        }
+    }
+    qDebug () << "5" << t.elapsed();
+    cv::Mat interactionMat;
+    interactionMat = cv::Mat::zeros(IDList.size(),IDList.size(),CV_8UC1);
+
+    for(int i = 0; i < frames.size();i++)
+    {
+        //        if(frames.size()/i*100%10 == 0)
+        //                qDebug() << i <<  frames.size();
+
+        for(int j = 0; j < frames[i].interactionID.size(); j+=2)
+        {
+            QString IDA = frames[i].IDList[frames[i].interactionID[j]];
+            QString IDB = frames[i].IDList[frames[i].interactionID[j+1]];
+
+
+            int m = IDList.indexOf(IDA);
+            int n = IDList.indexOf(IDB);
+            if(m>n)
+            {
+                int temp = m;
+                m = n;
+                n = temp;
+            }
+            if(interactionMat.at<uchar>(m,n) < 255)
+                interactionMat.at<uchar>(m,n)++;
+        }
+    }
+    //sort mat
+    QStringList IDListRow = IDList;
+    QStringList IDListCol = IDList;
+    for(int i = 0; i < interactionMat.rows;i++)
+    {
+        for(int m = i+1; m < interactionMat.cols-1; m++)
+        {
+            for(int n = m+1; n < interactionMat.cols;n++)
+            {
+                int sumM = 0;
+                int sumN = 0;
+                for(int k = 0; k < interactionMat.cols; k++)
+                {
+                    sumM += interactionMat.at<uchar>(k,m);
+                    sumN += interactionMat.at<uchar>(k,n);
+                }
+                if(sumM < sumN)
+                {
+                    for(int k = 0; k < interactionMat.cols; k++)
+                    {
+                        uchar temp = interactionMat.at<uchar>(k,m);
+                        interactionMat.at<uchar>(k,m) = interactionMat.at<uchar>(k,n);
+                        interactionMat.at<uchar>(k,n) = temp;
+                    }
+                    IDListCol.swap(m,n);
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < interactionMat.cols;i++)
+    {
+        for(int m = i+1; m < interactionMat.rows-1; m++)
+        {
+            for(int n = m+1; n < interactionMat.rows;n++)
+            {
+                int sumM = 0;
+                int sumN = 0;
+                for(int k = 0; k < interactionMat.rows; k++)
+                {
+                    sumM += interactionMat.at<uchar>(m,k);
+                    sumN += interactionMat.at<uchar>(n,k);
+                }
+                if(sumM < sumN)
+                {
+                    for(int k = 0; k < interactionMat.rows; k++)
+                    {
+                        uchar temp = interactionMat.at<uchar>(m,k);
+                        interactionMat.at<uchar>(m,k) = interactionMat.at<uchar>(n,k);
+                        interactionMat.at<uchar>(n,k) = temp;
+                    }
+                    IDListRow.swap(m,n);
+                }
+            }
+        }
+    }
+
+
+
+    qDebug () << "6" << t.elapsed();
+    int scaleSize = 20;
+    cv::Mat interactionMatBig;
+    cv::resize(interactionMat,interactionMatBig,cv::Size(interactionMat.cols*scaleSize,interactionMat.rows*scaleSize),0,0,cv::INTERSECT_NONE);
+
+
+    cv::copyMakeBorder(interactionMatBig,interactionMatBig,scaleSize,0,scaleSize,0,cv::BORDER_CONSTANT,cv::Scalar(20));
+    cv::applyColorMap(interactionMatBig,interactionMatBig,cv::COLORMAP_JET);
+
+    if(!inOutIDList.empty())
+    {
+        for(int i = 0; i < IDList.size();i++)
+        {
+            if(inOutIDList.contains(IDListCol[i]))
+            {
+                cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,255));
+            }
+
+            else
+            {
+                cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+            }
+
+            if(inOutIDList.contains(IDListRow[i]))
+            {
+                cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,255));
+            }
+            else
+            {
+                cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+            }
+        }
+    }
+    else
+    {
+        for(int i = 0; i < IDList.size();i++)
+        {
+            cv::putText(interactionMatBig,IDListCol[i].toStdString(),cv::Point(scaleSize*(i+1),scaleSize/2),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+            cv::putText(interactionMatBig,IDListRow[i].toStdString(),cv::Point(0,scaleSize*(i+1)+scaleSize/4*3),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(255,255,255));
+        }
+    }
+    qDebug () << "7" << t.elapsed();
+    cv::imshow("interaction",interactionMatBig);
+    cv::imwrite("out/bee_info/interaction.jpg",interactionMatBig);
+
+}
+
+void DataProcessWindow::on_trajectory_behavior_classifier_pushButton_clicked()
+{
+
+    static int i = 1;
+    i++;
+#ifdef DEBUG_BEHAVIOR_CLASSIFIER
+    while(1)
+    {
+        if(this->data[i].size > 200)
+            break;
+        i++;
+        if(i >=  this->data.size()-1)
+            return;
+    }
+#endif
+#ifndef DEBUG_BEHAVIOR_CLASSIFIER
+    for(int i = 0; i < this->data.size(); i++)
+    {
+#endif
+        this->data[i].distanceP2P = this->data[i].getMovingDistanceP2P();
+        this->data[i].trajectoryPattern = trajectoryClassifier(this->data[i].distanceP2P,1.0,2.0);
+#ifdef DEBUG_BEHAVIOR_CLASSIFIER
+        qDebug() << this->data[i].ID << i << this->data.size() << this->data[i].size;
+        qDebug() << this->data[i].distanceP2P;
+        qDebug() << this->data[i].trajectoryPattern;
+#endif
+
+#ifdef DEBUG_BEHAVIOR_CLASSIFIER
+
+        cv::Rect ROI = this->data[i].getROI();
+#ifdef RECORD_BEHAVIOR_CLASSIFIER
+        cv::VideoWriter out("trajectory.avi",cv::VideoWriter::fourcc('X','V','I','D'),12.0,ROI.size());
+#endif
+        cv::Mat src = cv::Mat::zeros(1600,3600,CV_8UC3);
+        for(int j = 0; j < this->data[i].position.size();j++)
+        {
+            cv::Mat dstTrajectory = this->data[i].getTrajectoryPlotPart(src,1,j);
+            cv::Mat show = dstTrajectory(ROI);
+#ifdef RECORD_BEHAVIOR_CLASSIFIER
+            out.write(show);
+#endif
+            cv::imshow("dst",show);
+            cv::waitKey(83);
+        }
+#ifdef RECORD_BEHAVIOR_CLASSIFIER
+        out.release();
+#endif
+#ifdef RECORD_BEHAVIOR_CLASSIFIER
+        src = cv::Mat::zeros(1600,3600,CV_8UC3);
+        for(int j = 0; j < this->data[i].trajectoryPattern.size();j++)
+        {
+            static bool isStart = 0;
+            static bool isEnd = 0;
+            static int start = 0;
+            static int end = 0;
+            static int nowPattern = -1;
+            if(this->data[i].trajectoryPattern[j] != nowPattern)
+            {
+                if(isStart == 0)
+                {
+                    nowPattern = this->data[i].trajectoryPattern[j];
+                    start = j;
+                    isStart = 1;
+
+                }
+                else
+                {
+                    end = j-1;
+                    isEnd = 1;
+                }
+            }
+            if(isEnd)
+            {
+                cv::Mat subTrajectory = this->data[i].getTrajectoryPlotPart(src,start,end);
+                cv::Mat show = subTrajectory(ROI);
+                cv::imshow("show sub",show);
+                cv::imwrite(QString::number(start).toStdString()+"_"+QString::number(nowPattern).toStdString()+".jpg",show);
+                isStart = 0;
+                isEnd = 0;
+                j--;
+            }
+        }
+
+
+#endif
+#endif
+#ifdef DEBUG_BEHAVIOR_CLASSIFIER
+        qDebug() << "end";
+#endif
+#ifndef DEBUG_BEHAVIOR_CLASSIFIER
+    }
+#endif
+}
+
+void DataProcessWindow::on_test2_pushButton_clicked()
+{
+    //pattern classification
+//    OT->trajectoryClassify(this->data,this->OTParams);
+//        OT->trajectoryClassify3D(this->data,this->OTParams);
+
+
+    //group pattern count and ratio
+    QVector<QStringList> infoID;
+    infoID << this->controlWhiteList << this->experimentWhiteList;
+    QVector< QVector<double> > infoRatio;
+    this->getGroupBeePatternRation(this->data,infoID,infoRatio);
+
+    //    for(int i = 0; i < infoID.size(); i++)
+    //    {
+    //        qDebug() << infoID[i] << infoRatio[i];
+    //    }
+
+    //individual pattern ratio
+    QStringList individualInfoID;
+    QVector< QVector<double> > individualInfoRatio;
+    this->getIndividualBeePatternRatio(this->data,individualInfoID,individualInfoRatio);
+
+    //get transition matrix
+
+
+    cv::Mat PCAData;
+    PCAData.create(individualInfoRatio.size(),PATTERN_TYPES,CV_64FC1);
+    for(int i = 0; i < individualInfoRatio.size(); i++)
+    {
+        for(int j = 0; j < PATTERN_TYPES; j++)
+        {
+            PCAData.at<double>(i,j) = individualInfoRatio[i][j];
+        }
+    }
+
+    //plot 2D-PCA
+    int dims = 2;
+
+    cv::PCA *PCA_2D;
+    PCA_2D = new cv::PCA(PCAData,cv::Mat(),cv::PCA::DATA_AS_ROW,dims);
+    PCAData = PCA_2D->project(PCAData);
+    cv::normalize(PCAData,PCAData,0,1,cv::NORM_MINMAX);
+
+    //check folder exist or not
+    QDir outInfo("out/bee_info");
+    if(!outInfo.exists())
+    {
+        outInfo.cdUp();
+        outInfo.mkdir("bee_info");
+        outInfo.cd("bee_info");
+    }
+    QFile beePCAFile(outInfo.absolutePath()+"/"+"individual_PCA.csv");
+    beePCAFile.open(QIODevice::ReadWrite);
+
+    QTextStream outPCA(&beePCAFile);
+    for(int i = 0; i < individualInfoRatio.size(); i++)
+    {
+        outPCA << individualInfoID[i] << ",";
+        for(int j = 0; j < dims; j++)
+        {
+            outPCA << PCAData.at<double>(i,j) << ",";
+        }
+        outPCA << "\n";
+    }
+    beePCAFile.close();
+
+    QFile beeInfoFile(outInfo.absolutePath()+"/"+"individual_info.csv");
+    beeInfoFile.open(QIODevice::ReadWrite);
+
+    QTextStream out(&beeInfoFile);
+
+    for(int i = 0; i < individualInfoRatio.size(); i++)
+    {
+        out << individualInfoID[i] << ",";
+        for(int j = 0; j < PATTERN_TYPES; j++)
+        {
+            out << individualInfoRatio[i][j] << ",";
+        }
+        out << "\n";
+    }
+    beeInfoFile.close();
+
+    QVector<beeDailyInfo> beeInfo;
+    this->getDailyInfo(beeInfo);
+
+    QFile motionPatternCountFile(outInfo.absolutePath()+"/"+"motion_pattern_count.csv");
+    motionPatternCountFile.open(QIODevice::ReadWrite);
+    QTextStream motionOut(&motionPatternCountFile);
+    for(int i = 0; i < beeInfo.size();i++)
+    {
+
+        motionOut << beeInfo[i].date << "\n";
+        for(int j = 0; j < beeInfo[i].IDList.size();j++)
+        {
+            motionOut << beeInfo[i].IDList[j] << ",";
+            for(int k = 0 ; k < beeInfo[i].motionPatternCount[j].size(); k++)
+            {
+                motionOut << beeInfo[i].motionPatternCount[j][k];
+                if(k != beeInfo[i].motionPatternCount[j].size()-1)
+                    motionOut << ",";
+            }
+            motionOut << "\n";
+        }
+    }
+    motionPatternCountFile.close();
+
+    //get trajectory distance
+
+    //    qDebug() << outInfo.absolutePath()+"/trajectory_distance.csv";
+    QFile file;
+    file.setFileName(outInfo.absolutePath()+"/trajectory_info.csv");
+    file.open(QIODevice::WriteOnly);
+    QTextStream outTra(&file);
+
+    outTra << "ID,StartTime,Trajectory_distance,Trajectory_velocity,Detected_time,"
+           << "Static_count,Loitering_count,Moving_forward_count,Moving_CW_count,Moving_CCW_count,Waggle_count,Count_sum,"
+           << "Static_ratio,Loitering_ratio,Moving_ratio,Group\n";
+
+    for(int i = 0; i < this->data.size(); i++)
+    {
+        if(this->data[i].getTrajectoryMovingVelocity() < 250 &&this->data[i].position.size() > 12)
+        {
+            outTra << this->data[i].ID << ",";
+            outTra << this->data[i].startTime.toString("yyyy-MM-dd-hh-mm-ss") << ",";
+            outTra << this->data[i].getTrajectoryMovingDistance() << ",";
+            outTra << this->data[i].getTrajectoryMovingVelocity() << ",";
+            outTra << this->data[i].getDetectedTime() << ",";
+
+            QVector<double> patternCount = this->data[i].getPatternCount();
+            outTra << patternCount[0] << ",";
+            outTra << patternCount[1] << ",";
+            outTra << patternCount[2] << ",";
+            outTra << patternCount[3] << ",";
+            outTra << patternCount[4] << ",";
+            outTra << patternCount[5] << ",";
+
+            double patternCountSum = patternCount[0]+patternCount[1]+patternCount[2]+patternCount[3]+patternCount[4]+patternCount[5];
+            outTra << patternCountSum << ",";
+            outTra << patternCount[0]/patternCountSum << ",";
+            outTra << patternCount[1]/patternCountSum << ",";
+            outTra << (patternCount[2]+patternCount[3]+patternCount[4]+patternCount[5])/patternCountSum << ",";
+
+            if(this->controlWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
+                outTra << 0;
+            else if(this->experimentWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
+                outTra << 1;
+            else
+                outTra << -1;
+
+            outTra << "\n";
+        }
+    }
+    file.close();
+
+    this->outBeeBehaviorInfo(this->data);
 }

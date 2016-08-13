@@ -20,6 +20,28 @@ cv::Mat trackPro::getTrajectoryPlot(const cv::Mat &src)
     return dst;
 }
 
+cv::Mat trackPro::getTrajectoryPlotPart(const cv::Mat &src,int from,int end)
+{
+    cv::Mat dst = src.clone();
+
+    if(from < 0)
+        return dst;
+    if(end > this->position.size()-1)
+        return dst;
+    for(int i = from; i < end; i++)
+    {
+        if(this->trajectoryPattern[i] == 0)
+            cv::line(dst,position[i],position[i+1],cv::Scalar(0,255,0));
+        else if(this->trajectoryPattern[i] == 1)
+            cv::line(dst,position[i],position[i+1],cv::Scalar(0,255,255));
+        else if(this->trajectoryPattern[i] == 2)
+            cv::line(dst,position[i],position[i+1],cv::Scalar(0,0,255));
+        else
+            cv::line(dst,position[i],position[i+1],cv::Scalar(255,255,255));
+    }
+    return dst;
+}
+
 cv::Mat trackPro::getCriticalPointPlot(const cv::Mat &src)
 {
     cv::Mat dst = src.clone();
@@ -73,6 +95,41 @@ double trackPro::getMovingTime()
 double trackPro::getDetectedTime()
 {
     return (double)this->startTime.msecsTo(this->endTime)/1000.0;
+}
+
+QVector<double> trackPro::getMovingDistanceP2P()
+{
+    QVector<double> distanceP2P;
+    for(int i = 0; i < this->position.size()-1; i++)
+    {
+        double distance = 0;
+        distance = sqrt(pow((this->position[i+1].x-this->position[i].x),2)+pow((this->position[i+1].y-this->position[i].y),2));
+        distanceP2P.append(distance);
+    }
+    return distanceP2P;
+}
+
+cv::Rect trackPro::getROI()
+{
+    int minX = IMAGE_SIZE_X*3;
+    int minY = IMAGE_SIZE_Y;
+    int maxX = 0;
+    int maxY = 0;
+
+    for(int i = 0; i < this->position.size();i++)
+    {
+        if(this->position[i].x < minX)
+            minX = this->position[i].x;
+        if(this->position[i].x > maxX)
+            maxX = this->position[i].x;
+
+        if(this->position[i].y < minY)
+            minY = this->position[i].y;
+        if(this->position[i].y > maxY)
+            maxY = this->position[i].y;
+    }
+
+    return cv::Rect(cv::Point(minX,minY),cv::Point(maxX,maxY));
 }
 
 //cv::Mat trackPro::getPatternCountMat()
@@ -154,7 +211,6 @@ void object_tracking::compute(const QDateTime &time, const std::vector<cv::Vec3f
 
     //threshold of distance
     int minDistanceThreshold = 2000;
-    //    int minTimeGap = 5;
 
     //for saving path and circle size
     int circleSize = circles.size();
@@ -222,12 +278,6 @@ void object_tracking::compute(const QDateTime &time, const std::vector<cv::Vec3f
             this->path.push_back(emptyPath);
         }
     }
-
-    //    for(int i = 0; i < this->path.size(); i++)
-    //    {
-    //        qDebug() << "pathSize" << this->path.size() << "position" << this->path[i].position[0].x << this->path[i].position[0].y;
-    //    }
-
 }
 
 void object_tracking::setImageRange(const cv::Size &imageRange)
@@ -266,20 +316,16 @@ void object_tracking::drawPath(cv::Mat& src)
 
     std::vector<std::vector<cv::Point> > path;
     this->lastPath(path);
-    //qDebug() << "i" << path.size();
 
     for(int i = 0; i < path.size();i++)
     {
-        //qDebug() <<"i" << i << "j" << path[i].size();
         if(path[i].size() < 1)
         {
-            //qDebug() << "size not enough";
             break;
         }
         for(int j = 0 ;j < path[i].size()-1;j++)
         {
-
-            //qDebug() << path[i][j].x <<path[i][j].y << path[i][j+1].x <<path[i][j+1].y;
+            //draw path line by line
             if(path[i][j] != cv::Point(-1,-1) || path[i][j+1] != cv::Point(-1,-1))
                 cv::line(src,path[i][j],path[i][j+1],cv::Scalar(255,255,255),4);
         }
@@ -818,7 +864,7 @@ void object_tracking::tracjectoryWhiteList(QVector<trackPro> &data, const QStrin
     }
 }
 
-void object_tracking::tracjectoryClassify(QVector<trackPro> &path, const objectTrackingParameters params)
+void object_tracking::trajectoryClassify(QVector<trackPro> &path, const objectTrackingParameters params)
 {
     //check all path
     for(int i = 0; i < path.size(); i++)
@@ -870,6 +916,50 @@ void object_tracking::tracjectoryClassify(QVector<trackPro> &path, const objectT
         }
         //qDebug() << patternSequence;
         path[i].pattern = patternSequence;
+        emit sendProgress((i+1)*100.0/path.size());
+    }
+}
+
+void object_tracking::trajectoryClassify3D(QVector<trackPro> &path, const objectTrackingParameters params)
+{
+    //check all path
+    for(int i = 0; i < path.size(); i++)
+    {
+        QVector<int> patternSequence3D;
+        //check path position size is bigger than  SHORTEST_SAMPLE_SIZE or not
+        if(path.at(i).size > this->segmentSize-1)
+        {
+            for(int j = 0; j < path.at(i).size-this->segmentSize+1; j++)
+            {
+                //grab path segment
+                QVector<cv::Point> motion(this->segmentSize);
+                for(int m = 0; m < this->segmentSize; m++)
+                {
+                    motion[m] = path.at(i).position.at(j+m);
+                }
+                QVector<float> var = this->variance(motion);
+                //NO_MOVE
+                if(var[0] < params.thresholdNoMove && var[1] < params.thresholdNoMove && abs(var[2]) < params.thresholdNoMove)
+                {
+                    patternSequence3D.append(NO_MOVE);
+                }
+                //LOITERING
+                else if(var[0] < params.thresholdLoitering && var[1] < params.thresholdLoitering && abs(var[2]) < params.thresholdLoitering)
+                {
+                    patternSequence3D.append(LOITERING);
+                }
+                else
+                {
+                    patternSequence3D.append(MOVING);
+                }
+#ifdef SHOW_PATTERN_NAME
+                qDebug() << tracjectoryName(patternSequence.at(patternSequence.size()-1));
+                drawPathPattern(motion);
+#endif
+            }
+        }
+        //qDebug() << patternSequence;
+        path[i].pattern3D = patternSequence3D;
         emit sendProgress((i+1)*100.0/path.size());
     }
 }
