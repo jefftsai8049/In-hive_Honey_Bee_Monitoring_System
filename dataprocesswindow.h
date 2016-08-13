@@ -213,12 +213,17 @@ private:
 
     void plotBeeInfo(const QVector<trackPro> &data);
 
-    //bee analysis
+    //for fix length trajectory analysis
     void getGroupBeePatternRation(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector< QVector<double> > &infoRatio);
 
     void getIndividualBeePatternRatio(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoRatio);
 
     void getDailyInfo(QVector<beeDailyInfo> &beeInfo);
+
+    //for behavior trajecotory analysis
+    void getGroupBeePatternRation_behavior(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector< QVector<double> > &infoRatio);
+
+    void getIndividualBeePatternRatio_behavior(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoRatio);
 
     //testing...
     void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);

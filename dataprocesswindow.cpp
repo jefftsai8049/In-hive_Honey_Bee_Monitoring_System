@@ -859,6 +859,128 @@ void DataProcessWindow::getDailyInfo(QVector<beeDailyInfo> &beeInfo)
     }
 }
 
+void DataProcessWindow::getGroupBeePatternRation_behavior(QVector<trackPro> &data, QVector<QStringList> &infoID, QVector<QVector<double> > &infoRatio)
+{
+    QVector< QVector<double> > group(infoID.size());
+
+    for(int i = 0; i < infoID.size();i++)
+    {
+        group[i].resize(PATTERN_TYPES_BEHAVIOR);
+
+    }
+    for(int i = 0; i < data.size();i++)
+    {
+        int gID;
+        for(int j = 0; j < infoID.size();j++)
+        {
+            if(infoID[j].contains(QString(data[i].ID[0])))
+            {
+                gID = j;
+                break;
+            }
+        }
+        for(int j = 0; j < PATTERN_TYPES_BEHAVIOR; j++)
+            group[gID][j] += data[i].getPatternCount()[j];
+    }
+
+    QVector<double> sum(infoID.size());
+    for(int i = 0; i < infoID.size(); i++)
+    {
+        for(int j = 0; j < PATTERN_TYPES_BEHAVIOR;j++)
+        {
+            sum[i] += group[i][j];
+
+        }
+    }
+    for(int i = 0; i < infoID.size(); i++)
+    {
+        for(int j = 0; j < PATTERN_TYPES_BEHAVIOR;j++)
+        {
+            group[i][j] /= sum[i];
+        }
+    }
+    infoRatio = group;
+}
+
+void DataProcessWindow::getIndividualBeePatternRatio_behavior(QVector<trackPro> &data, QStringList &individualInfoID, QVector<QVector<double> > &individualInfoRatio)
+{
+    //individual bee pattern count and ratio
+    for(int i = 0; i < data.size();i++)
+    {
+        QString ID = data.at(i).ID;
+        QVector<double> count = data[i].getPatternCount_behavior();
+
+        int index = individualInfoID.indexOf(ID);
+        if(index == -1)
+        {
+            individualInfoID.append(ID);
+            individualInfoRatio.append(count);
+        }
+        else
+        {
+            for(int j = 0; j < count.size(); j++)
+            {
+                individualInfoRatio[index][j] += count[j];
+            }
+        }
+    }
+    //sort
+    for(int i = 0; i < individualInfoID.size()-1; i++)
+    {
+        for(int j = i; j < individualInfoID.size(); j++)
+        {
+            if(individualInfoID[i][0]>individualInfoID[j][0])
+            {
+                individualInfoID.swap(i,j);
+                QVector<double> temp = individualInfoRatio[i];
+                individualInfoRatio[i] = individualInfoRatio[j];
+                individualInfoRatio[j] = temp;
+            }
+            else if(individualInfoID[i][0]==individualInfoID[j][0])
+            {
+                if(individualInfoID[i][1]>individualInfoID[j][1])
+                {
+                    individualInfoID.swap(i,j);
+                    QVector<double> temp = individualInfoRatio[i];
+                    individualInfoRatio[i] = individualInfoRatio[j];
+                    individualInfoRatio[j] = temp;
+                }
+            }
+        }
+    }
+    //get ratio
+    for(int i = 0; i < individualInfoID.size(); i++)
+    {
+        double sum = 0;
+        for(int j = 0; j < individualInfoRatio[i].size(); j++)
+        {
+            sum += individualInfoRatio[i][j];
+        }
+        if(sum < BEE_TRACK_COUNT)
+        {
+            individualInfoID.removeAt(i);
+            individualInfoRatio.remove(i);
+            i--;
+        }
+        else{
+            for(int j = 0; j < individualInfoRatio[i].size(); j++)
+            {
+                individualInfoRatio[i][j] /= sum;
+            }
+        }
+    }
+    //remove impossible data
+    for(int i = 0; i < individualInfoID.size(); i++)
+    {
+        if(!SUTM.contains(QString(individualInfoID[i][1])))
+        {
+            individualInfoID.removeAt(i);
+            individualInfoRatio.remove(i);
+            i--;
+        }
+    }
+}
+
 void DataProcessWindow::getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition)
 {
     //    for(int i = 0; i < data.size(); i++)
@@ -1057,7 +1179,7 @@ QVector<int> DataProcessWindow::trajectoryClassifier(const QVector<double> &raw,
     QVector<double> distanceP2P_AVG = this->movingAVG(raw,24);
 
     QVector<int> out;
-    for(int i = 0; i < raw.size();i++)
+    for(int i = 0; i < raw.size()+1;i++)
     {
         if(i < distanceP2P_AVG.size())
         {
@@ -2269,35 +2391,32 @@ void DataProcessWindow::on_trajectory_behavior_classifier_pushButton_clicked()
 
 void DataProcessWindow::on_test2_pushButton_clicked()
 {
-    //pattern classification
+    //pattern classification already do
+
 //    OT->trajectoryClassify(this->data,this->OTParams);
-//        OT->trajectoryClassify3D(this->data,this->OTParams);
+//    OT->trajectoryClassify3D(this->data,this->OTParams);
 
 
     //group pattern count and ratio
     QVector<QStringList> infoID;
     infoID << this->controlWhiteList << this->experimentWhiteList;
     QVector< QVector<double> > infoRatio;
-    this->getGroupBeePatternRation(this->data,infoID,infoRatio);
+    this->getGroupBeePatternRation_behavior(this->data,infoID,infoRatio);
 
-    //    for(int i = 0; i < infoID.size(); i++)
-    //    {
-    //        qDebug() << infoID[i] << infoRatio[i];
-    //    }
 
     //individual pattern ratio
     QStringList individualInfoID;
     QVector< QVector<double> > individualInfoRatio;
-    this->getIndividualBeePatternRatio(this->data,individualInfoID,individualInfoRatio);
+    this->getIndividualBeePatternRatio_behavior(this->data,individualInfoID,individualInfoRatio);
 
     //get transition matrix
 
 
     cv::Mat PCAData;
-    PCAData.create(individualInfoRatio.size(),PATTERN_TYPES,CV_64FC1);
+    PCAData.create(individualInfoRatio.size(),PATTERN_TYPES_BEHAVIOR,CV_64FC1);
     for(int i = 0; i < individualInfoRatio.size(); i++)
     {
-        for(int j = 0; j < PATTERN_TYPES; j++)
+        for(int j = 0; j < PATTERN_TYPES_BEHAVIOR; j++)
         {
             PCAData.at<double>(i,j) = individualInfoRatio[i][j];
         }
@@ -2319,7 +2438,7 @@ void DataProcessWindow::on_test2_pushButton_clicked()
         outInfo.mkdir("bee_info");
         outInfo.cd("bee_info");
     }
-    QFile beePCAFile(outInfo.absolutePath()+"/"+"individual_PCA.csv");
+    QFile beePCAFile(outInfo.absolutePath()+"/"+"individual_PCA_behavior.csv");
     beePCAFile.open(QIODevice::ReadWrite);
 
     QTextStream outPCA(&beePCAFile);
@@ -2334,7 +2453,7 @@ void DataProcessWindow::on_test2_pushButton_clicked()
     }
     beePCAFile.close();
 
-    QFile beeInfoFile(outInfo.absolutePath()+"/"+"individual_info.csv");
+    QFile beeInfoFile(outInfo.absolutePath()+"/"+"individual_info_behavior.csv");
     beeInfoFile.open(QIODevice::ReadWrite);
 
     QTextStream out(&beeInfoFile);
@@ -2342,7 +2461,7 @@ void DataProcessWindow::on_test2_pushButton_clicked()
     for(int i = 0; i < individualInfoRatio.size(); i++)
     {
         out << individualInfoID[i] << ",";
-        for(int j = 0; j < PATTERN_TYPES; j++)
+        for(int j = 0; j < PATTERN_TYPES_BEHAVIOR; j++)
         {
             out << individualInfoRatio[i][j] << ",";
         }
@@ -2350,29 +2469,29 @@ void DataProcessWindow::on_test2_pushButton_clicked()
     }
     beeInfoFile.close();
 
-    QVector<beeDailyInfo> beeInfo;
-    this->getDailyInfo(beeInfo);
+//    QVector<beeDailyInfo> beeInfo;
+//    this->getDailyInfo(beeInfo);
 
-    QFile motionPatternCountFile(outInfo.absolutePath()+"/"+"motion_pattern_count.csv");
-    motionPatternCountFile.open(QIODevice::ReadWrite);
-    QTextStream motionOut(&motionPatternCountFile);
-    for(int i = 0; i < beeInfo.size();i++)
-    {
+//    QFile motionPatternCountFile(outInfo.absolutePath()+"/"+"motion_pattern_count_behavior.csv");
+//    motionPatternCountFile.open(QIODevice::ReadWrite);
+//    QTextStream motionOut(&motionPatternCountFile);
+//    for(int i = 0; i < beeInfo.size();i++)
+//    {
 
-        motionOut << beeInfo[i].date << "\n";
-        for(int j = 0; j < beeInfo[i].IDList.size();j++)
-        {
-            motionOut << beeInfo[i].IDList[j] << ",";
-            for(int k = 0 ; k < beeInfo[i].motionPatternCount[j].size(); k++)
-            {
-                motionOut << beeInfo[i].motionPatternCount[j][k];
-                if(k != beeInfo[i].motionPatternCount[j].size()-1)
-                    motionOut << ",";
-            }
-            motionOut << "\n";
-        }
-    }
-    motionPatternCountFile.close();
+//        motionOut << beeInfo[i].date << "\n";
+//        for(int j = 0; j < beeInfo[i].IDList.size();j++)
+//        {
+//            motionOut << beeInfo[i].IDList[j] << ",";
+//            for(int k = 0 ; k < beeInfo[i].motionPatternCount[j].size(); k++)
+//            {
+//                motionOut << beeInfo[i].motionPatternCount[j][k];
+//                if(k != beeInfo[i].motionPatternCount[j].size()-1)
+//                    motionOut << ",";
+//            }
+//            motionOut << "\n";
+//        }
+//    }
+//    motionPatternCountFile.close();
 
     //get trajectory distance
 
@@ -2396,19 +2515,19 @@ void DataProcessWindow::on_test2_pushButton_clicked()
             outTra << this->data[i].getTrajectoryMovingVelocity() << ",";
             outTra << this->data[i].getDetectedTime() << ",";
 
-            QVector<double> patternCount = this->data[i].getPatternCount();
+            QVector<double> patternCount = this->data[i].getPatternCount_behavior();
             outTra << patternCount[0] << ",";
             outTra << patternCount[1] << ",";
             outTra << patternCount[2] << ",";
-            outTra << patternCount[3] << ",";
-            outTra << patternCount[4] << ",";
-            outTra << patternCount[5] << ",";
+            outTra << 0 << ",";
+            outTra << 0 << ",";
+            outTra << 0 << ",";
 
-            double patternCountSum = patternCount[0]+patternCount[1]+patternCount[2]+patternCount[3]+patternCount[4]+patternCount[5];
+            double patternCountSum = patternCount[0]+patternCount[1]+patternCount[2];
             outTra << patternCountSum << ",";
             outTra << patternCount[0]/patternCountSum << ",";
             outTra << patternCount[1]/patternCountSum << ",";
-            outTra << (patternCount[2]+patternCount[3]+patternCount[4]+patternCount[5])/patternCountSum << ",";
+            outTra << patternCount[2]/patternCountSum << ",";
 
             if(this->controlWhiteList.indexOf(QString(this->data[i].ID[0])) > -1)
                 outTra << 0;

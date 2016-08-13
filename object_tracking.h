@@ -74,18 +74,27 @@ struct trackPro
     QDateTime endTime;
     int size;
     QVector<cv::Point> position;
+
+    //for fix length pattern classifier
     QVector<int> pattern;
     QVector<int> pattern3D;
+    QVector<double> getPatternCount();
 
+    //MDL
     QVector<int> criticalPointIndex;
+    cv::Mat getCriticalPointPlot(const cv::Mat &src);
 
+    //for behavior length pattern classifier
     QVector<int> trajectoryPattern;
     QVector<double> distanceP2P;
+    QVector<double> getMovingDistanceP2P();
+    QVector<double> getPatternCount_behavior();
+    cv::Rect getROI();
 
-    QVector<double> getPatternCount();
+    //draw trajecory plot
     cv::Mat getTrajectoryPlot(const cv::Mat &src);
     cv::Mat getTrajectoryPlotPart(const cv::Mat &src, int from, int end);
-    cv::Mat getCriticalPointPlot(const cv::Mat &src);
+
 
     double getTrajectoryMovingDistance();
     double getTrajectoryMovingVelocity();
@@ -93,8 +102,7 @@ struct trackPro
     double getLoiteringTime();
     double getMovingTime();
     double getDetectedTime();
-    QVector<double> getMovingDistanceP2P();
-    cv::Rect getROI();
+
 };
 
 

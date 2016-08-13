@@ -109,6 +109,16 @@ QVector<double> trackPro::getMovingDistanceP2P()
     return distanceP2P;
 }
 
+QVector<double> trackPro::getPatternCount_behavior()
+{
+    QVector<double> count(PATTERN_TYPES_BEHAVIOR);
+    for(int i = 0; i < trajectoryPattern.size();i++)
+    {
+        count[trajectoryPattern.at(i)]++;
+    }
+    return count;
+}
+
 cv::Rect trackPro::getROI()
 {
     int minX = IMAGE_SIZE_X*3;
