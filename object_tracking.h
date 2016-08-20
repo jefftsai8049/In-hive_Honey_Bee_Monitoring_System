@@ -87,6 +87,7 @@ struct trackPro
     //for behavior length pattern classifier
     QVector<int> trajectoryPattern;
     QVector<double> distanceP2P;
+    QVector<double> distanceP2P_AVG;
     QVector<double> getMovingDistanceP2P();
     QVector<double> getPatternCount_behavior();
     cv::Rect getROI();

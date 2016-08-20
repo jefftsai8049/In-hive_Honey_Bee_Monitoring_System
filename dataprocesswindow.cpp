@@ -880,7 +880,7 @@ void DataProcessWindow::getGroupBeePatternRation_behavior(QVector<trackPro> &dat
             }
         }
         for(int j = 0; j < PATTERN_TYPES_BEHAVIOR; j++)
-            group[gID][j] += data[i].getPatternCount()[j];
+            group[gID][j] += data[i].getPatternCount_behavior()[j];
     }
 
     QVector<double> sum(infoID.size());
@@ -1071,7 +1071,7 @@ void DataProcessWindow::outBeeBehaviorInfo(QVector<trackPro> &data)
         }
         else
         {
-            qDebug() << data[i].ID;
+            //            qDebug() << data[i].ID;
         }
     }
 
@@ -1174,9 +1174,9 @@ QVector<double> DataProcessWindow::movingAVG(const QVector<double> &raw, const i
     return out;
 }
 
-QVector<int> DataProcessWindow::trajectoryClassifier(const QVector<double> &raw, const double &staticThreshold, const double &loiteringThreshold)
+QVector<int> DataProcessWindow::trajectoryClassifier(const QVector<double> &raw, QVector<double> &distanceP2P_AVG, const double &staticThreshold, const double &loiteringThreshold)
 {
-    QVector<double> distanceP2P_AVG = this->movingAVG(raw,24);
+    distanceP2P_AVG = this->movingAVG(raw,24);
 
     QVector<int> out;
     for(int i = 0; i < raw.size()+1;i++)
@@ -1228,6 +1228,101 @@ QVector<int> DataProcessWindow::trajectoryClassifier(const QVector<double> &raw,
     }
 
     return out;
+}
+
+void DataProcessWindow::OtsuMultiLevel(double &T1, double &T2, const std::vector<double> &val)
+{
+    int bins = 256;
+
+    //total number of pixels
+    int N = val.size();
+
+
+    //find max
+    double maxVal = 10;
+//    for(int k = 0; k < val.size(); k++)
+//    {
+//        if(val[k] > maxVal)
+//            maxVal = val[k];
+//    }
+
+    //accumulate image histogram and total number of pixels
+    std::vector<double> histogram(bins);
+    double deltaVal = maxVal/(double)bins;
+    for(int k = 0; k < val.size(); k++)
+    {
+        histogram[(int)(val[k]/deltaVal)]++;
+    }
+
+    double W0K, W1K, W2K, M0, M1, M2, currVarB, maxBetweenVar, M0K, M1K, M2K, MT;
+
+    T1 = 0;
+    T2 = 0;
+
+    W0K = 0;
+    W1K = 0;
+
+    M0K = 0;
+    M1K = 0;
+
+    MT = 0;
+    maxBetweenVar = 0;
+    for (int k = 0; k < bins; k++) {
+        MT += k * (histogram[k] / (double) N);
+    }
+
+
+    for (int t1 = 0; t1 < bins-2; t1++) {
+        W0K += histogram[t1] / (double) N; //Pi
+        M0K += t1 * (histogram[t1] / (double) N); //i * Pi
+        M0 = M0K / W0K; //(i * Pi)/Pi
+
+        W1K = 0;
+        M1K = 0;
+
+        for (int t2 = t1 + 1; t2 < bins-1; t2++) {
+            W1K += histogram[t2] / (double) N; //Pi
+            M1K += t2 * (histogram[t2] / (double) N); //i * Pi
+            M1 = M1K / W1K; //(i * Pi)/Pi
+
+            W2K = 1 - (W0K + W1K);
+            M2K = MT - (M0K + M1K);
+
+            if (W2K <= 0) break;
+
+            M2 = M2K / W2K;
+
+            currVarB = W0K * (M0 - MT) * (M0 - MT) + W1K * (M1 - MT) * (M1 - MT) + W2K * (M2 - MT) * (M2 - MT);
+
+            if (maxBetweenVar < currVarB) {
+                maxBetweenVar = currVarB;
+                T1 = t1;
+                T2 = t2;
+            }
+        }
+    }
+
+
+}
+
+double DataProcessWindow::meanVarStd(const std::vector<double> &val, double &mean, double &std)
+{
+    mean = 0;
+    for(int m = 0; m < val.size();m++)
+    {
+        mean += val[m]/(double)val.size();
+    }
+    std = 0;
+    for(int n = 0; n < val.size();n++)
+    {
+        std += pow(val[n]-mean,2);
+    }
+    std /= (double)val.size();
+
+    double var = std;
+    std = sqrt(std);
+
+    return var;
 }
 
 void DataProcessWindow::on_actionWhite_List_triggered()
@@ -1397,7 +1492,7 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     ui->distributed_area_pushButton->setEnabled(true);
     ui->mdl_pushButton->setEnabled(true);
     ui->test_pushButton->setEnabled(true);
-    ui->test2_pushButton->setEnabled(true);
+    //    ui->test2_pushButton->setEnabled(true);
     ui->trajectory_behavior_classifier_pushButton->setEnabled(true);
 
 
@@ -1407,10 +1502,11 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 void DataProcessWindow::on_test_pushButton_clicked()
 {
     QFile file;
-    file.setFileName("trajectory_distance.csv");
+    file.setFileName("trajectory_distance2.csv");
     file.open(QIODevice::WriteOnly);
     QTextStream out(&file);
 
+    QDateTime date = this->data[0].startTime;;
     for(int i = 0; i < this->data.size(); i++)
     {
         for(int j = 0; j < this->data[i].distanceP2P.size();j++)
@@ -1418,6 +1514,137 @@ void DataProcessWindow::on_test_pushButton_clicked()
             out << this->data[i].distanceP2P[j] << ",";
             //        if(this->data[i].)
         }
+        if(date.date() != this->data[i].startTime.date())
+        {
+            date = this->data[i].startTime;
+            out << "\n";
+        }
+
+
+    }
+    file.close();
+
+    date = this->data[0].startTime;
+//    QDateTime date = this->data[0].startTime;
+    int i = 0;
+    while(1){
+
+
+
+        std::vector<double> val;
+
+        //pick up data day by day
+        while(date.date() == this->data[i].startTime.date())
+        {
+
+
+            for(int j = 0 ; j < this->data[i].distanceP2P_AVG.size(); j++)
+                val.push_back(this->data[i].distanceP2P_AVG[j]);
+
+            i++;
+
+            if(i>=this->data.size())
+                break;
+        }
+
+//        qDebug() << "check1";
+        //calculate mean and std
+        double mean,std,var;
+        var = meanVarStd(val,mean,std);
+
+        //remove extreme value
+        double upperLimit = mean+3*var;
+        double lowerLimit = mean-3*var;
+
+        for(int k = 0; k < val.size(); k++)
+        {
+            //            qDebug() << "kick" << k;
+            if(val[k] > upperLimit || val[k] < lowerLimit)
+            {
+                val.erase(val.begin()+k);
+                k--;
+            }
+
+        }
+
+        //find max
+        double maxVal = 0;
+        for(int k = 0; k < val.size(); k++)
+        {
+            if(val[k] > maxVal)
+                maxVal = val[k];
+        }
+
+        //        //do histogram
+        int bins = 255;
+        std::vector<double> histogram(bins);
+        double deltaVal = maxVal/(double)bins;
+        for(int k = 0; k < val.size(); k++)
+        {
+            histogram[(int)(val[k]/deltaVal)]++;
+        }
+
+//        qDebug() << "check2";
+        //Otsu's multi-level threshold
+        double OtsuVar;
+        int T1Result = 0;
+        int T2Result = 0;
+        for(int T1 = 0; T1 < bins-2;T1++)
+        {
+            for(int T2 = T1+2; T2 < bins-1;T2++)
+            {
+                std::vector<double> T1Val(histogram.begin(),histogram.begin()+T1);
+                std::vector<double> T2Val(histogram.begin()+T1+1,histogram.begin()+T2);
+                std::vector<double> T3Val(histogram.begin()+T2+1,histogram.end());
+
+                double P1 = 0;
+                for(int k = 0;k < T1;k++)
+                {
+                    P1 += histogram[k]/val.size();
+                }
+
+
+                double P2 = 0;
+                for(int k = T1;k < T2-T1;k++)
+                {
+                    P2 += histogram[k]/val.size();
+                }
+
+
+                double P3 = 0;
+                for(int k = T2;k < bins-T2;k++)
+                {
+                    P3 += histogram[k]/val.size();
+                }
+
+
+                double m,s;
+                //                double nowOtsuVal = P1*meanVarStd(T1Val,m,s)+P2*meanVarStd(T2Val,m,s)+P3*meanVarStd(T3Val,m,s);
+                double nowOtsuVal = (T1-0)/255.0*meanVarStd(T1Val,m,s)+(T2-T1)/255.0*meanVarStd(T2Val,m,s)+(255-T2)/255.0*meanVarStd(T3Val,m,s);
+                if(T1 == 0 && T2 == 1)
+                {
+                    OtsuVar = nowOtsuVal;
+                    T1Result = T1;
+                    T2Result = T2;
+                }
+
+                if(OtsuVar < nowOtsuVal)
+                {
+                    OtsuVar = nowOtsuVal;
+                    T1Result = T1;
+                    T2Result = T2;
+                }
+
+            }
+        }
+        double T1,T2;
+        this->OtsuMultiLevel(T1,T2,val);
+//        qDebug() << date.date()<< i << maxVal << maxVal*((double)T1Result/255.0) << maxVal*((double)T2Result/255.0);
+        qDebug() << 10.0*((double)T1/255.0) << 10.0*((double)T2/255.0);
+        if(i>=this->data.size())
+            break;
+
+        date = this->data[i].startTime;
 
     }
 }
@@ -2315,7 +2542,7 @@ void DataProcessWindow::on_trajectory_behavior_classifier_pushButton_clicked()
     {
 #endif
         this->data[i].distanceP2P = this->data[i].getMovingDistanceP2P();
-        this->data[i].trajectoryPattern = trajectoryClassifier(this->data[i].distanceP2P,1.0,2.0);
+        this->data[i].trajectoryPattern = trajectoryClassifier(this->data[i].distanceP2P,this->data[i].distanceP2P_AVG,1.0,2.0);
 #ifdef DEBUG_BEHAVIOR_CLASSIFIER
         qDebug() << this->data[i].ID << i << this->data.size() << this->data[i].size;
         qDebug() << this->data[i].distanceP2P;
@@ -2387,14 +2614,11 @@ void DataProcessWindow::on_trajectory_behavior_classifier_pushButton_clicked()
 #ifndef DEBUG_BEHAVIOR_CLASSIFIER
     }
 #endif
-}
 
-void DataProcessWindow::on_test2_pushButton_clicked()
-{
     //pattern classification already do
 
-//    OT->trajectoryClassify(this->data,this->OTParams);
-//    OT->trajectoryClassify3D(this->data,this->OTParams);
+    //    OT->trajectoryClassify(this->data,this->OTParams);
+    //    OT->trajectoryClassify3D(this->data,this->OTParams);
 
 
     //group pattern count and ratio
@@ -2469,29 +2693,29 @@ void DataProcessWindow::on_test2_pushButton_clicked()
     }
     beeInfoFile.close();
 
-//    QVector<beeDailyInfo> beeInfo;
-//    this->getDailyInfo(beeInfo);
+    //    QVector<beeDailyInfo> beeInfo;
+    //    this->getDailyInfo(beeInfo);
 
-//    QFile motionPatternCountFile(outInfo.absolutePath()+"/"+"motion_pattern_count_behavior.csv");
-//    motionPatternCountFile.open(QIODevice::ReadWrite);
-//    QTextStream motionOut(&motionPatternCountFile);
-//    for(int i = 0; i < beeInfo.size();i++)
-//    {
+    //    QFile motionPatternCountFile(outInfo.absolutePath()+"/"+"motion_pattern_count_behavior.csv");
+    //    motionPatternCountFile.open(QIODevice::ReadWrite);
+    //    QTextStream motionOut(&motionPatternCountFile);
+    //    for(int i = 0; i < beeInfo.size();i++)
+    //    {
 
-//        motionOut << beeInfo[i].date << "\n";
-//        for(int j = 0; j < beeInfo[i].IDList.size();j++)
-//        {
-//            motionOut << beeInfo[i].IDList[j] << ",";
-//            for(int k = 0 ; k < beeInfo[i].motionPatternCount[j].size(); k++)
-//            {
-//                motionOut << beeInfo[i].motionPatternCount[j][k];
-//                if(k != beeInfo[i].motionPatternCount[j].size()-1)
-//                    motionOut << ",";
-//            }
-//            motionOut << "\n";
-//        }
-//    }
-//    motionPatternCountFile.close();
+    //        motionOut << beeInfo[i].date << "\n";
+    //        for(int j = 0; j < beeInfo[i].IDList.size();j++)
+    //        {
+    //            motionOut << beeInfo[i].IDList[j] << ",";
+    //            for(int k = 0 ; k < beeInfo[i].motionPatternCount[j].size(); k++)
+    //            {
+    //                motionOut << beeInfo[i].motionPatternCount[j][k];
+    //                if(k != beeInfo[i].motionPatternCount[j].size()-1)
+    //                    motionOut << ",";
+    //            }
+    //            motionOut << "\n";
+    //        }
+    //    }
+    //    motionPatternCountFile.close();
 
     //get trajectory distance
 
@@ -2543,3 +2767,4 @@ void DataProcessWindow::on_test2_pushButton_clicked()
 
     this->outBeeBehaviorInfo(this->data);
 }
+

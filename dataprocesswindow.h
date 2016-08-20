@@ -164,7 +164,6 @@ private slots:
 
     void on_trajectory_behavior_classifier_pushButton_clicked();
 
-    void on_test2_pushButton_clicked();
 
 private:
     Ui::DataProcessWindow *ui;
@@ -236,7 +235,13 @@ private:
 
     QVector<double> movingAVG(const QVector<double> &raw,const int &length);
 
-    QVector<int> trajectoryClassifier(const QVector<double> &raw, const double &staticThreshold, const double &loiteringThreshold);
+    QVector<int> trajectoryClassifier(const QVector<double> &raw,QVector<double> &distanceP2P_AVG, const double &staticThreshold, const double &loiteringThreshold);
+
+    void OtsuMultiLevel(double &T1,double &T2,const std::vector<double> &val);
+
+
+    //statistic
+    double meanVarStd(const std::vector<double> &val, double &mean, double &std);
 
 signals:
     void sendSystemLog(const QString &log);
