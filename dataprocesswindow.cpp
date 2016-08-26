@@ -103,40 +103,6 @@ void DataProcessWindow::setObjectTrackingParameters(const objectTrackingParamete
     emit sendSystemLog("Object tracking parameters set!");
 }
 
-//void DataProcessWindow::pseudoColor(const cv::Mat &src, cv::Mat &dst)
-//{
-//    cv::Mat srcGray = src.clone();
-//    //cv::cvtColor(src,srcGray,CV_GRAY2BGR);
-//    cv::Mat HSI;
-//    HSI.create(srcGray.rows,srcGray.cols,CV_32FC3);
-//    for(int i=0;i<srcGray.rows;i++)
-//    {
-//        for(int j=0;j<srcGray.cols;j++)
-//        {
-//            double val =srcGray.at<uchar>(i,j);
-//            HSI.at<cv::Vec3f>(i,j)[0] = val/255.0*360.0;
-//            HSI.at<cv::Vec3f>(i,j)[1] = 1;
-//            HSI.at<cv::Vec3f>(i,j)[2] = 1;
-//        }
-//    }
-//    //    //using HSI to convert gray to colcor image
-//    //    cv::cvtColor(HSI,dst,cv::COLOR_HSV2BGR);
-//    //    cv::Mat reference;
-//    //    reference.create(100,600,CV_32FC3);
-//    //    for(int m=0;m<reference.rows;m++)
-//    //    {
-//    //        for(int n=0;n<reference.cols;n++)
-//    //        {
-//    //            double val =(double)n/(double)reference.cols;
-//    //            reference.at<cv::Vec3f>(m,n)[0] = val*360.0;
-//    //            reference.at<cv::Vec3f>(m,n)[1] = 1;
-//    //            reference.at<cv::Vec3f>(m,n)[2] = 1;
-//    //        }
-//    //    }
-//    //    cv::Mat reference_dst;
-//    //    cv::cvtColor(reference,reference_dst,cv::COLOR_HSV2RGB);
-//}
-
 void DataProcessWindow::on_actionOpen_Raw_Data_triggered()
 {
     //set button
@@ -174,7 +140,6 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 {
     //pattern classification
     OT->trajectoryClassify(this->data,this->OTParams);
-    //    OT->trajectoryClassify3D(this->data,this->OTParams);
 
 
     //group pattern count and ratio
@@ -183,17 +148,10 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
     QVector< QVector<double> > infoRatio;
     this->getGroupBeePatternRation(this->data,infoID,infoRatio);
 
-    //    for(int i = 0; i < infoID.size(); i++)
-    //    {
-    //        qDebug() << infoID[i] << infoRatio[i];
-    //    }
-
     //individual pattern ratio
     QStringList individualInfoID;
     QVector< QVector<double> > individualInfoRatio;
     this->getIndividualBeePatternRatio(this->data,individualInfoID,individualInfoRatio);
-
-    //get transition matrix
 
 
     cv::Mat PCAData;
@@ -988,6 +946,11 @@ void DataProcessWindow::getIndividualBeePatternRatio_behavior(QVector<trackPro> 
     }
 }
 
+void DataProcessWindow::saveDailyInfoFile(const QString &fileName)
+{
+
+}
+
 void DataProcessWindow::getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition)
 {
     //    for(int i = 0; i < data.size(); i++)
@@ -1362,7 +1325,6 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     //white list filter
     emit sendSystemLog("before white list filter : "+QString::number(this->data.size()));
     QStringList whiteList = this->controlWhiteList+this->experimentWhiteList;
-    qDebug() << whiteList;
     OT->tracjectoryWhiteList(this->data,whiteList);
     emit sendSystemLog("after white list filter : "+QString::number(this->data.size()));
 
@@ -1385,7 +1347,6 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
         outlierList.append(outlier);
 
     }
-    qDebug() << outlierDate << outlierList;
     //remove some outlier
     for(int i = 0; i < this->data.size(); i++)
     {
@@ -1411,7 +1372,6 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
 
     emit sendSystemLog("after remove outlier : "+QString::number(this->data.size()));
 
-    qDebug() << "wrong";
     //remove wrong day data
     if(ui->day_selected_checkBox->isChecked())
     {
@@ -1441,18 +1401,8 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
         emit sendSystemLog("after remove wrong day data : "+QString::number(this->data.size()));
     }
 
-    qDebug() << "day";
     //get daily info
     getDailyInfo(beeInfo);
-
-
-    //show bee daily info
-    //    for(int i = 0; i < beeInfo.size(); i++)
-    //    {
-    //        qDebug() << beeInfo[i].date;
-    //        qDebug() << beeInfo[i].IDList;
-    //        qDebug() << beeInfo[i].trajectoryCount;
-    //    }
 
     //plot chart
     this->plotBeeInfo(this->data);
@@ -1494,8 +1444,10 @@ void DataProcessWindow::on_white_list_smoothing_pushButton_clicked()
     ui->distributed_area_pushButton->setEnabled(true);
     ui->mdl_pushButton->setEnabled(true);
     ui->test_pushButton->setEnabled(true);
+    ui->sub_group_distributed_area_pushButton->setEnabled(true);
     //    ui->test2_pushButton->setEnabled(true);
     ui->trajectory_behavior_classifier_pushButton->setEnabled(true);
+    ui->interaction_matrix_pushButton->setEnabled(true);
 
 
 

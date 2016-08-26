@@ -612,7 +612,7 @@ Remove Outlier</string>
    </widget>
    <widget class="QPushButton" name="sub_group_distributed_area_pushButton">
     <property name="enabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>

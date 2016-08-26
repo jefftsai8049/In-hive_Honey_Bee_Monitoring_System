@@ -214,23 +214,23 @@ void MainWindow::on_actionLoad_Raw_Video_File_triggered()
 }
 
 
-void MainWindow::on_actionLoad_Stitching_Image_triggered()
-{
-    //load video file and take first to manul stitch
+//void MainWindow::on_actionLoad_Stitching_Image_triggered()
+//{
+//    //load video file and take first to manul stitch
 
-    QStringList fileNames = QFileDialog::getOpenFileNames();
+//    QStringList fileNames = QFileDialog::getOpenFileNames();
 
-    if(fileNames.isEmpty())
-    {
-        return;
-    }
+//    if(fileNames.isEmpty())
+//    {
+//        return;
+//    }
 
-    std::vector<std::string> fileNamesVec;
-    for(int i = 0; i < fileNames.size(); i++)
-    {
-        fileNamesVec.push_back(fileNames[i].toStdString());
-    }
-}
+//    std::vector<std::string> fileNamesVec;
+//    for(int i = 0; i < fileNames.size(); i++)
+//    {
+//        fileNamesVec.push_back(fileNames[i].toStdString());
+//    }
+//}
 
 void MainWindow::receivePano(cv::Mat pano)
 {
@@ -782,6 +782,7 @@ void MainWindow::on_text_system_comboBox_currentIndexChanged(const QString &arg1
 void MainWindow::on_actionRecord_Process_Procedure_triggered()
 {
     //record video from ui image window
+    //some crash?
     if(ui->actionRecord_Process_Procedure->isChecked())
     {
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save Video File"),"record.avi",tr("Video (*.avi)"));

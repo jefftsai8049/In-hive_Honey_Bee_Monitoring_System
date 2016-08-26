@@ -73,7 +73,7 @@ private slots:
 
     void on_actionLoad_Raw_Video_File_triggered();
 
-    void on_actionLoad_Stitching_Image_triggered();
+//    void on_actionLoad_Stitching_Image_triggered();
 
     void on_stitchingStart_pushButton_clicked();
 

@@ -219,6 +219,9 @@ private:
 
     void getIndividualBeePatternRatio_behavior(QVector<trackPro> &data,QStringList &individualInfoID,QVector< QVector<double> > &individualInfoRatio);
 
+    //for output file
+    void saveDailyInfoFile(const QString &fileName);
+
     //testing...
     void getTransitionMatrix(QVector<trackPro> &data, QStringList &individualInfoID, QVector<cv::Mat> &transition);
 

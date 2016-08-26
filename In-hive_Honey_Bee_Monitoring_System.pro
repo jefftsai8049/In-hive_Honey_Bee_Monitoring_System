@@ -4,6 +4,9 @@
 #
 #-------------------------------------------------
 
+#with QT 5.6 OpenCV 3.0 MATLAB 2014a
+#Don't use debug mode will crash (HOG function)
+
 QT       += core gui opengl serialport concurrent printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -13,13 +16,14 @@ TEMPLATE = app
 
 DEFINES += HAVE_OPENCV \
 #        += DEBUG_TAG_RECOGNITION \
-#        DEBUG_VOTING \
+#        += DEBUG_VOTING \
 #        += SAVE_TAG_IMAGE \
 #        += DEBUG_OBJECT_TRACKING \
         NO_OCL \
 #        += SHOW_PATTERN_NAME
-#        DEBUG_BEHAVIOR_CLASSIFIER \
-#        RECORD_BEHAVIOR_CLASSIFIER \
+#        += DEBUG_BEHAVIOR_CLASSIFIER \
+#testing
+#        += RECORD_BEHAVIOR_CLASSIFIER \
 
 
 SOURCES += main.cpp\
@@ -54,6 +58,7 @@ FORMS    += mainwindow.ui \
     dataprocesswindow.ui \
     objecttrackingform.ui \
     whitelist.ui
+
 win32 {
     msvc {
         QMAKE_CXXFLAGS += -openmp -arch:AVX -D "_CRT_SECURE_NO_WARNINGS"

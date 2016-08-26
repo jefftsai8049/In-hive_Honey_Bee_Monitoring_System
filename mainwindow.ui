@@ -761,7 +761,6 @@ No found!</string>
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionLoad_Stitching_Image"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_Raw_Video_File"/>
     <addaction name="separator"/>
@@ -810,14 +809,6 @@ No found!</string>
    </property>
    <property name="text">
     <string>Load Raw Video File</string>
-   </property>
-  </action>
-  <action name="actionLoad_Stitching_Image">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Load Stitching Image</string>
    </property>
   </action>
   <action name="actionChange_SVM_Model">

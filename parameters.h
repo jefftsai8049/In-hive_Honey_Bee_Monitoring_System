@@ -6,8 +6,6 @@
 //for image input size
 #define IMAGE_SIZE_X 1200
 #define IMAGE_SIZE_Y 1600
-//#define imgSizeX 1200
-//#define imgSizeY 1600
 
 //for temperature and humidity recorder
 #define SERIAL_TIME 2000
@@ -23,6 +21,10 @@
 #define DIRECTION_THRESHOLD 30.0
 #define VIDEOTIME (30*60)
 #define HOUGH_CIRCLE_RESIZE 2
+
+//for SVM parameters
+#define C_UPPER 15
+#define C_LOWER -5
 
 #endif // PARAMETERS
 
