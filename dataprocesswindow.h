@@ -164,7 +164,6 @@ private slots:
 
     void on_trajectory_behavior_classifier_pushButton_clicked();
 
-
 private:
     Ui::DataProcessWindow *ui;
 

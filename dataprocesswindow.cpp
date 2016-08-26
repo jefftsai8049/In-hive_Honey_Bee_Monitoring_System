@@ -8,8 +8,11 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     ui(new Ui::DataProcessWindow)
 {
     ui->setupUi(this);
+    //for analyze trajectory
     OT = new object_tracking;
+    //for setting OT parameters UI form
     OTS = new ObjectTrackingForm;
+    //for setting ID white list UI
     WL = new WhiteList;
 
     //connect system log recorder and show
@@ -20,17 +23,21 @@ DataProcessWindow::DataProcessWindow(QWidget *parent) :
     connect(OT,SIGNAL(sendLoadRawDataFinish()),this,SLOT(receiveLoadDataFinish()));
     //connect processing progress bar to ui
     connect(OT,SIGNAL(sendProgress(int)),this,SLOT(receiveProgress(int)));
-
+    //connect the OT setting UI and this UI to sned the object tracking parameters
     connect(OTS,SIGNAL(setObjectTrackingParameters(objectTrackingParameters)),this,SLOT(setObjectTrackingParameters(objectTrackingParameters)));
-
+    //connect the whitelist UI and this UI to sned the white list
     connect(WL,SIGNAL(sendWhiteList(QStringList,QStringList)),this,SLOT(receiveWhiteList(QStringList,QStringList)));
 
+
+    //request object tracking parameters from the OTS UI
     OTS->requestObjectTrackingParameters();
+    //set up trajectory segmentation size
     OT->setPathSegmentSize(this->OTParams.segmentSize);
+
 
     SUTM << "A" << "B" << "C" << "E" << "F" << "G" << "H" << "K" << "L" << "O" << "P" << "R" << "S" << "T" << "U" << "Y" << "Z";
 
-
+    //for drawing trajectory color table
     loadColorTable("model/color_table.csv",this->colorTable);
 
     //new a QProcess for running matlab script
@@ -161,9 +168,6 @@ void DataProcessWindow::on_actionOpen_Processed_Data_triggered()
     ui->trajectory_classify_pushButton->setEnabled(true);
     ui->white_list_smoothing_pushButton->setEnabled(true);
 
-
-    //    //plot chart
-    //    this->plotBeeInfo(this->data);
 }
 
 void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
@@ -327,6 +331,7 @@ void DataProcessWindow::on_trajectory_classify_pushButton_clicked()
 
 void DataProcessWindow::on_actionObject_Tracking_triggered()
 {
+    //show object tracking setting UI
     OTS->show();
 }
 
@@ -504,6 +509,7 @@ void DataProcessWindow::loadWeatherData(const QStringList &fileNames, QVector<we
 
 void DataProcessWindow::getInHiveTemp(const QVector<weatherInfo> &weatherData, QVector<double> &x, QVector<double> &y)
 {
+    //transform the weatherinfo data to plotable format
     x.clear();
     y.clear();
 
@@ -519,6 +525,7 @@ void DataProcessWindow::getInHiveTemp(const QVector<weatherInfo> &weatherData, Q
 
 void DataProcessWindow::getInHiveRH(const QVector<weatherInfo> &weatherData, QVector<double> &x, QVector<double> &y)
 {
+    //transform the weatherinfo data to plotable format
     x.clear();
     y.clear();
 
@@ -534,6 +541,7 @@ void DataProcessWindow::getInHiveRH(const QVector<weatherInfo> &weatherData, QVe
 
 void DataProcessWindow::getOutHiveTemp(const QVector<weatherInfo> &weatherData, QVector<double> &x, QVector<double> &y)
 {
+    //transform the weatherinfo data to plotable format
     x.clear();
     y.clear();
 
@@ -549,6 +557,7 @@ void DataProcessWindow::getOutHiveTemp(const QVector<weatherInfo> &weatherData, 
 
 void DataProcessWindow::getOutHiveRH(const QVector<weatherInfo> &weatherData, QVector<double> &x, QVector<double> &y)
 {
+    //transform the weatherinfo data to plotable format
     x.clear();
     y.clear();
 
@@ -564,6 +573,7 @@ void DataProcessWindow::getOutHiveRH(const QVector<weatherInfo> &weatherData, QV
 
 void DataProcessWindow::getPressure(const QVector<weatherInfo> &weatherData, QVector<double> &x, QVector<double> &y)
 {
+    //transform the weatherinfo data to plotable format
     x.clear();
     y.clear();
 
@@ -579,12 +589,9 @@ void DataProcessWindow::getPressure(const QVector<weatherInfo> &weatherData, QVe
 
 void DataProcessWindow::getDailyBeeInfo(const QVector<trackPro> &data, QVector<QString> &x, QVector<double> &y)
 {
+    //transform the weatherinfo data to plotable format
     x.clear();
     y.clear();
-
-    //int days = data.at(0).startTime.daysTo(data.at(data.size()-1).startTime)+1;
-    //    x.resize(days);
-    //    y.resize(days);
 
     double dayCount = 0;
     QStringList day;
@@ -1240,11 +1247,6 @@ void DataProcessWindow::OtsuMultiLevel(double &T1, double &T2, const std::vector
 
     //find max
     double maxVal = 10;
-//    for(int k = 0; k < val.size(); k++)
-//    {
-//        if(val[k] > maxVal)
-//            maxVal = val[k];
-//    }
 
     //accumulate image histogram and total number of pixels
     std::vector<double> histogram(bins);
@@ -1525,7 +1527,7 @@ void DataProcessWindow::on_test_pushButton_clicked()
     file.close();
 
     date = this->data[0].startTime;
-//    QDateTime date = this->data[0].startTime;
+    //    QDateTime date = this->data[0].startTime;
     int i = 0;
     while(1){
 
@@ -1547,7 +1549,7 @@ void DataProcessWindow::on_test_pushButton_clicked()
                 break;
         }
 
-//        qDebug() << "check1";
+        //        qDebug() << "check1";
         //calculate mean and std
         double mean,std,var;
         var = meanVarStd(val,mean,std);
@@ -1575,7 +1577,7 @@ void DataProcessWindow::on_test_pushButton_clicked()
                 maxVal = val[k];
         }
 
-        //        //do histogram
+        //do histogram
         int bins = 255;
         std::vector<double> histogram(bins);
         double deltaVal = maxVal/(double)bins;
@@ -1584,7 +1586,7 @@ void DataProcessWindow::on_test_pushButton_clicked()
             histogram[(int)(val[k]/deltaVal)]++;
         }
 
-//        qDebug() << "check2";
+
         //Otsu's multi-level threshold
         double OtsuVar;
         int T1Result = 0;
@@ -1619,7 +1621,6 @@ void DataProcessWindow::on_test_pushButton_clicked()
 
 
                 double m,s;
-                //                double nowOtsuVal = P1*meanVarStd(T1Val,m,s)+P2*meanVarStd(T2Val,m,s)+P3*meanVarStd(T3Val,m,s);
                 double nowOtsuVal = (T1-0)/255.0*meanVarStd(T1Val,m,s)+(T2-T1)/255.0*meanVarStd(T2Val,m,s)+(255-T2)/255.0*meanVarStd(T3Val,m,s);
                 if(T1 == 0 && T2 == 1)
                 {
@@ -1639,7 +1640,6 @@ void DataProcessWindow::on_test_pushButton_clicked()
         }
         double T1,T2;
         this->OtsuMultiLevel(T1,T2,val);
-//        qDebug() << date.date()<< i << maxVal << maxVal*((double)T1Result/255.0) << maxVal*((double)T2Result/255.0);
         qDebug() << 10.0*((double)T1/255.0) << 10.0*((double)T2/255.0);
         if(i>=this->data.size())
             break;
@@ -1651,8 +1651,10 @@ void DataProcessWindow::on_test_pushButton_clicked()
 
 void DataProcessWindow::on_distributed_area_pushButton_clicked()
 {
+    //check data is exist or not
     if(!data.isEmpty())
     {
+        //for saving raw image and trajectory image
         cv::Mat srcControl;
         srcControl = srcControl.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC1);
         cv::Mat srcExperiment;
@@ -1662,23 +1664,25 @@ void DataProcessWindow::on_distributed_area_pushButton_clicked()
         cv::Mat traExperiment;
         traExperiment = traExperiment.zeros(IMAGE_SIZE_Y,IMAGE_SIZE_X*3,CV_8UC3);
 
+        //trajectory count
         double controlCount = 0;
         double experimentCount = 0;
 
+        //scan each trajectory
         for(int i = 0;i < this->data.size();i++)
         {
-            //qDebug() << this->data[i].ID << this->data[i].position.size();
+            //get two ID character (ascii word)
             char firstChr = (char)this->data[i].ID.toStdString()[0]-65;
             char lastChr = (char)this->data[i].ID.toStdString()[1]-65;
+            //choose color form color table
             cv::Scalar lineColor = this->colorTable[firstChr*17+lastChr];
-            //qDebug() << firstChr << lastChr << firstChr*17+lastChr;
-            //            qDebug() << this->colorTable[firstChr*17+lastChr].
+
+            //if tag ID in control group white list
             if(this->controlWhiteList.indexOf(this->data[i].ID.at(0)) > -1)
             {
-
-                //qDebug() << "control "<< data[i].ID;
                 for(int j = 0;j < this->data[i].position.size(); j++)
                 {
+                    //
                     if(this->data[i].position[j].x >= 3600 ||this->data[i].position[j].y >= 1600)
                     {
                         //qDebug() << j<< this->data[i].position[j].x << this->data[i].position[j].y;
@@ -2767,4 +2771,8 @@ void DataProcessWindow::on_trajectory_behavior_classifier_pushButton_clicked()
 
     this->outBeeBehaviorInfo(this->data);
 }
+
+
+
+
 

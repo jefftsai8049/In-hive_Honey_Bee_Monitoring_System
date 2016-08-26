@@ -63,6 +63,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //for tracking honeybee position
     TT = new trajectory_tracking;
 
+    //for tag recognition
+    TR = new tag_recognition;
+
     qRegisterMetaType<cv::Mat>("cv::Mat");
 
     //send execute speed back to mainwindow
@@ -73,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //send system log back to mainwindow
     connect(TT,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
+    connect(TR,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
 
 
 
@@ -88,14 +92,26 @@ MainWindow::MainWindow(QWidget *parent) :
     //load stitching model file
     QFile manulStitchModel("model/manual_stitching.xml");
     if(manulStitchModel.exists())
+    {
         TT->setManualStitchingFileName(manulStitchModel.fileName().toStdString());
+        QString msg;
+        QTextStream TS(&msg);
+        TS << "Stitching Model File Name : \n" << manulStitchModel.fileName();
+        ui->Stitching_model_name_label->setText(msg);
+    }
     else
         emit sendSystemLog(manulStitchModel.fileName()+" no found!");
 
     //load PCA model for tag image reduce dimensions
     QFile PCAModel("model/PCA_HOG_PCA_25_.txt");
     if(PCAModel.exists())
+    {
         TT->setPCAModelFileName(PCAModel.fileName().toStdString());
+        QString msg;
+        QTextStream TS(&msg);
+        TS << "PCA Model File Name : \n" << PCAModel.fileName();
+        ui->PCA_model_name_label->setText(msg);
+    }
     else
         emit sendSystemLog(PCAModel.fileName()+" no found!");
 
@@ -138,7 +154,13 @@ MainWindow::MainWindow(QWidget *parent) :
     SVMModel_Test.setFileName("model/model_HOG_PCA_25_-2_0.984706_Test.yaml");
 
     if(SVMModel_SUTM.exists())
+    {
         TT->setSVMModelFileName(SVMModel_SUTM.fileName().toStdString());
+        QString msg;
+        QTextStream TS(&msg);
+        TS << "SVM Model File Name : \n" << SVMModel_SUTM.fileName();
+        ui->SVM_model_name_label->setText(msg);
+    }
     else
         emit sendSystemLog(SVMModel_SUTM.fileName()+" no found!");
 
@@ -183,6 +205,7 @@ void MainWindow::on_actionLoad_Raw_Video_File_triggered()
     for (int k = 0;k<videoList[0].size();k++)
     {
         QString fileName = videoList[0][k]+"\n";
+        //remove first two chracters from the video file name
         fileName = fileName.mid(2,fileName.length()-2);
         ui->videoName_textBrowser->insertPlainText(fileName);
     }
@@ -225,23 +248,16 @@ void MainWindow::receiveFPS(const double &fpsRun)
 
 void MainWindow::receiveShowImage(const cv::Mat &src)
 {
-    //receive processing image form TT and show
+    //receive processing image form Trajectory Tracjing class and show
 
     static bool status = 0;
     if(status == 0)
     {
-        //        qDebug() << src.cols <<src.rows <<src.channels();
+        //first time use the imageShow_widget need to initialize and set the image size
         ui->imageShow_widget->initialize(1,src.cols,src.rows);
         status = 1;
     }
     ui->imageShow_widget->setImage(src);
-
-//    if(this->videoOut != NULL &&ui->actionRecord_Process_Procedure->isChecked())
-//    {
-//        //qDebug() << "write image";
-//        this->viwrite(src);
-//    }
-
 }
 
 void MainWindow::receiveSystemLog(const QString &msg)
@@ -456,8 +472,44 @@ void mouseCallBack(int event, int x, int y, int flag,void* userdata)
 
 void MainWindow::on_stitchingStart_pushButton_clicked()
 {
-    static int pressCount = 0;
-    //start processing video
+    if(isStopProcessing != 1)
+    {
+        static int pressCount = 0;
+        //start processing video
+        ui->videoName_textBrowser->clear();
+        for (int k = 0;k<videoList[0].size();k++)
+        {
+            QString fileName = videoList[0][k]+"\n";
+            fileName = fileName.mid(2,fileName.length()-2);
+            ui->videoName_textBrowser->insertPlainText(fileName);
+        }
+
+        stitchImage();
+
+        //send finish signal to mainwindow
+        if(pressCount == 0)
+        {
+            connect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
+
+        }
+        isStopProcessing = 0;
+        pressCount++;
+        ui->stitchingStart_pushButton->setEnabled(false);
+        ui->stitchingStop_pushButton->setEnabled(true);
+    }
+    isStopProcessing = 0;
+
+}
+
+void MainWindow::on_stitchingStop_pushButton_clicked()
+{
+    //stop processing video
+    isStopProcessing = 1;
+    TT->stopStitch();
+
+    ui->stitchingStart_pushButton->setEnabled(true);
+    ui->stitchingStop_pushButton->setEnabled(false);
+
     ui->videoName_textBrowser->clear();
     for (int k = 0;k<videoList[0].size();k++)
     {
@@ -465,28 +517,6 @@ void MainWindow::on_stitchingStart_pushButton_clicked()
         fileName = fileName.mid(2,fileName.length()-2);
         ui->videoName_textBrowser->insertPlainText(fileName);
     }
-
-    stitchImage();
-
-    //send finish signal to mainwindow
-    if(pressCount == 0)
-        connect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
-
-    pressCount++;
-    ui->stitchingStart_pushButton->setEnabled(false);
-    ui->stitchingStop_pushButton->setEnabled(true);
-}
-
-void MainWindow::on_stitchingStop_pushButton_clicked()
-{
-    //stop processing video
-    TT->stopStitch();
-
-    //    //send finish signal to mainwindow
-    //    disconnect(TT,SIGNAL(finish()),this,SLOT(on_stitchingStart_pushButton_clicked()));
-
-    ui->stitchingStart_pushButton->setEnabled(true);
-    ui->stitchingStop_pushButton->setEnabled(false);
 }
 
 void MainWindow::on_stitching_pushButton_clicked()
@@ -569,15 +599,6 @@ void MainWindow::on_show_image_checkBox_clicked()
     TT->setShowImage(ui->show_image_checkBox->isChecked());
 }
 
-void MainWindow::on_load_training_data_pushButton_clicked()
-{
-
-}
-
-void MainWindow::on_test_recognition_pushButton_clicked()
-{
-
-}
 
 
 void MainWindow::on_binarythreshold_spinBox_valueChanged(int arg1)
@@ -587,6 +608,7 @@ void MainWindow::on_binarythreshold_spinBox_valueChanged(int arg1)
 
 void MainWindow::on_actionChange_SVM_Model_triggered()
 {
+    //for change the SVM classifer model
     QString fileNameQ = QFileDialog::getOpenFileName(this,"SVM Model (.yaml)","","Model Files (*.yaml)");
     TT->setSVMModelFileName(fileNameQ.toStdString());
     ui->statusBar->showMessage("Change SVM model "+fileNameQ);
@@ -594,6 +616,7 @@ void MainWindow::on_actionChange_SVM_Model_triggered()
 
 void MainWindow::on_actionChange_PCA_Model_triggered()
 {
+    //for change the PCA model
     QString fileNameQ = QFileDialog::getOpenFileName(this,"PCA Model (.txt)","","Model Files (*.txt)");
     TT->setPCAModelFileName(fileNameQ.toStdString());
     ui->statusBar->showMessage("Change PCA model "+fileNameQ);
@@ -601,6 +624,7 @@ void MainWindow::on_actionChange_PCA_Model_triggered()
 
 void MainWindow::on_actionChange_Stitching_Model_triggered()
 {
+    //for change manul stitching model
     QString fileNameQ = QFileDialog::getOpenFileName(this,"Stitching Model (.xml)","","Model Files (*.xml)");
     TT->setManualStitchingFileName(fileNameQ.toStdString());
     ui->statusBar->showMessage("Change Stitching model "+fileNameQ);
@@ -608,105 +632,28 @@ void MainWindow::on_actionChange_Stitching_Model_triggered()
 
 void MainWindow::on_actionTrain_New_Tag_Model_triggered()
 {
+    //for output msg
+    QString outMsg;
+    QTextStream TS(&outMsg);
+
     //load train data
     QString fileName = QFileDialog::getExistingDirectory();
-    cv::Mat trainData;
-    cv::Mat trainLabel;
 
-    TR->loadTrainData(fileName,trainData,trainLabel,ui->actionWith_HOG->isChecked());
-    qDebug() << trainData.channels() << trainData.cols << trainData.rows;
+
+    //load training data to data and label format
+
     //load test data
     QString fileName2 = QFileDialog::getExistingDirectory();
-    std::vector<cv::Mat> testData;
-    std::vector<int> testLabel;
-    TR->loadTestData(fileName2,testData,testLabel,ui->actionWith_HOG->isChecked());
 
+    tagRecognitionParameters params;
+    params.withHOG = ui->actionWith_HOG->isChecked();
+    params.withPCA = ui->actionWith_PCA->isChecked();
+    params.CValPowLower = -5;
+    params.CValPowUpper = 15;
+    params.PCARemains = ui->PCARemains_spinBox->value();
 
-
-    //train PCA model and save
-    if(ui->actionWith_PCA->isChecked())
-    {
-        pca = new cv::PCA(trainData,cv::Mat(),cv::PCA::DATA_AS_ROW,ui->PCARemains_spinBox->value());
-        trainData = pca->project(trainData);
-        cv::normalize(trainData,trainData,0,1,cv::NORM_MINMAX);
-
-
-        QString name = "model/PCA_";
-        if(ui->actionWith_HOG->isChecked())
-        {
-            name = name+"HOG_";
-        }
-        if(ui->actionWith_PCA->isChecked())
-        {
-            name = name+"PCA_"+QString::number(ui->PCARemains_spinBox->value())+"_";
-        }
-        cv::FileStorage PCA_save((name+".txt").toStdString(),cv::FileStorage::WRITE);
-
-
-
-        pca->write(PCA_save);
-    }
-
-    cv::Ptr<cv::ml::SVM> SVMModel = cv::ml::SVM::create();
-    SVMModel->setType(cv::ml::SVM::C_SVC);
-    SVMModel->setKernel(cv::ml::SVM::LINEAR);
-    int C_lower = -5;
-    int C_upper = 15;
-
-
-    //calculate accuracy
-    for(int i=0;i<testData.size();i++)
-    {
-        if(ui->actionWith_PCA->isChecked())
-        {
-            testData[i] = pca->project(testData[i]);
-        }
-        cv::normalize(testData[i],testData[i],0,1,cv::NORM_MINMAX);
-    }
-
-    for(int j=0;j<(C_upper-C_lower);j++)
-    {
-        //        for(int k=0;k<(Gamma_upper-Gamma_lower);k++)
-        //        {
-        //train SVM model
-        qDebug() << "SVM";
-
-        //            int k =3;
-        //            int j = 14;
-        //            SVMModel->setGamma(pow(2,k+Gamma_lower));
-        SVMModel->setC(pow(2,j+C_lower));
-        //                                    SVMModel->setGamma(pow(2,-12));
-        //                                    SVMModel->setC(pow(2,9));
-        //            qDebug() << "Set" << j+C_lower << k+Gamma_lower;
-        qDebug() << "Set" << j+C_lower;
-        cv::Ptr<cv::ml::TrainData> data;
-        data = cv::ml::TrainData::create(trainData,cv::ml::ROW_SAMPLE,trainLabel);
-        SVMModel->train(data);
-
-
-        //calculate accuracy
-        int correct = 0;
-        for(int i=0;i<testData.size();i++)
-        {
-            if(SVMModel->predict(testData[i]) == testLabel[i])
-                correct++;
-        }
-        double accuracy = (double)correct/(double)testData.size();
-        qDebug() << accuracy;
-        //            SVMModel->save("model_test.yaml");
-        QString name = "model/model_";
-        if(ui->actionWith_HOG->isChecked())
-        {
-            name = name+"HOG_";
-        }
-        if(ui->actionWith_PCA->isChecked())
-        {
-            name = name+"PCA_"+QString::number(ui->PCARemains_spinBox->value())+"_";
-        }
-        SVMModel->save((name+QString::number(j+C_lower)+"_"+QString::number(accuracy)+".yaml").toStdString());
-        //            SVMModel->save((name+QString::number(j+C_lower)+"_"+QString::number(k+Gamma_lower)+"_"+QString::number(accuracy)+".yaml").toStdString());
-        //        }
-    }
+    QFuture<void> trainAllStep = QtConcurrent::run(TR,&tag_recognition::trainAllStep,fileName,fileName2,params);
+    //    TR->trainAllStep(fileName,fileName2,params);
 }
 
 void MainWindow::on_erase_pushButton_clicked()

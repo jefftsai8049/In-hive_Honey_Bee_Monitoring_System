@@ -249,13 +249,10 @@ void trajectory_tracking::run()
     std::vector<cv::Mat> frame(3);
     std::vector<cv::Mat> frameGray(3);
 
-
-
     //main processing loop
     while(!this->stopped)
     {
         emit sendProcessingProgress(frameCount/maxFPS*100.0);
-
 
         //calculate processing fps
         QTime clock;
@@ -386,10 +383,6 @@ void trajectory_tracking::run()
 #endif
             }
 
-
-            //            std::vector<std::vector<cv::Point> > path;
-            //            OT->lastPath(path);
-            //            this->drawPath(panoDrawCircle,path);
 #ifndef DEBUG_TAG_RECOGNITION
             if(showTrajectory)
                 OT->drawPath(panoDrawCircle);
@@ -419,8 +412,6 @@ void trajectory_tracking::run()
         //for calculate processing FPS
         frameCount++;
         emit sendFPS(1000.0/clock.elapsed());
-
-
     }
 #ifndef DEBUG_TAG_RECOGNITION
     OT->saveAllPath();

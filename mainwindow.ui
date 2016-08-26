@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_4">
      <attribute name="title">
@@ -603,42 +603,11 @@
        </item>
       </widget>
      </widget>
-    </widget>
-    <widget class="QWidget" name="tab_3">
-     <attribute name="title">
-      <string>Tag</string>
-     </attribute>
-     <widget class="QPushButton" name="load_training_data_pushButton">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>181</width>
-        <height>81</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Train</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="test_recognition_pushButton">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>120</y>
-        <width>181</width>
-        <height>81</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Test</string>
-      </property>
-     </widget>
      <widget class="QSpinBox" name="PCARemains_spinBox">
       <property name="geometry">
        <rect>
-        <x>30</x>
-        <y>270</y>
+        <x>70</x>
+        <y>470</y>
         <width>101</width>
         <height>31</height>
        </rect>
@@ -651,6 +620,67 @@
       </property>
       <property name="value">
        <number>25</number>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Model</string>
+     </attribute>
+     <widget class="QLabel" name="PCA_model_name_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>281</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>PCA Model File Name :
+No found!</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="HOG_model_name_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>281</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>HOG Model File Name :
+No found!</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="SVM_model_name_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>291</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SVM Model File Name :
+No found!</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="Stitching_model_name_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>281</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Stitching Model File Name :
+No found!</string>
       </property>
      </widget>
     </widget>
@@ -725,7 +755,7 @@
      <x>0</x>
      <y>0</y>
      <width>1401</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -288,6 +288,86 @@ int tag_recognition::wordMapping(const int &result)
 
 }
 
+void tag_recognition::trainAllStep(const QString trainPathName, const QString testPathName, const tagRecognitionParameters params)
+{
+    //for output msg
+    QString outMsg;
+    QTextStream TS(&outMsg);
+
+    //load train data
+    cv::Mat trainData;
+    cv::Mat trainLabel;
+
+    //load training data to data and label format
+    loadTrainData(trainPathName,trainData,trainLabel,params.withHOG);
+
+    //load test data
+    std::vector<cv::Mat> testData;
+    std::vector<int> testLabel;
+    loadTestData(testPathName,testData,testLabel,params.withHOG);
+
+    //show the training data channels, cols and rows
+    //channels should be 1
+    TS << "======== SVM Model Training ========" << "\n";
+    TS << "Training Data Channels : " << trainData.channels() << "\n";
+    TS << "Training Data Column Size : " << trainData.cols << "\n";
+    TS << "Training Data Row Size : " << trainData.rows << "\n";
+    emit sendSystemLog(outMsg);
+    outMsg.clear();
+
+    //train PCA model and save
+    if(params.withPCA)
+    {
+        trainPCA = new cv::PCA(trainData,cv::Mat(),cv::PCA::DATA_AS_ROW,params.PCARemains);
+        trainData = trainPCA->project(trainData);
+        //normalize the after PCA processing data to 0~1 range to make higher accuracy of SVM model
+        cv::normalize(trainData,trainData,0,1,cv::NORM_MINMAX);
+
+        QString name = "model/PCA_";
+        if(params.withHOG)
+        {
+            name = name+"HOG_";
+        }
+        if(params.withPCA)
+        {
+            name = name+"PCA_"+QString::number(params.PCARemains)+"_";
+        }
+        cv::FileStorage PCA_save((name+".txt").toStdString(),cv::FileStorage::WRITE);
+
+
+
+        trainPCA->write(PCA_save);
+    }
+    //svm model training
+    //pre set the svm type and kernel
+    //and the C value grid search range in 2^-5~2^15
+    trainSVMModel = cv::ml::SVM::create();
+    trainSVMModel->setType(cv::ml::SVM::C_SVC);
+    trainSVMModel->setKernel(cv::ml::SVM::LINEAR);
+
+    //calculate accuracy by predict test data
+    for(int i=0;i<testData.size();i++)
+    {
+        if(params.withPCA)
+        {
+            testData[i] = trainPCA->project(testData[i]);
+        }
+        cv::normalize(testData[i],testData[i],0,1,cv::NORM_MINMAX);
+    }
+
+    for(int j=0;j<(params.CValPowUpper-params.CValPowLower);j++)
+    {
+        tagRecognitionParameters params;
+        params.CValPow = pow(2,j+params.CValPowLower);
+        trainModel(trainData,trainLabel,testData,testLabel,params);
+    }
+    //show finish msg
+    TS << "SVM model training Finish" << "\n";
+    emit sendSystemLog(outMsg);
+    outMsg.clear();
+}
+
+
 bool tag_recognition::loadSVMModel(const std::string &fileName)
 {
 
@@ -306,20 +386,28 @@ bool tag_recognition::loadSVMModel(const std::string &fileName)
 
 }
 
-void tag_recognition::loadTrainData(const QString &path,cv::Mat &trainData,cv::Mat &trainLabel,const bool HOG)
+void tag_recognition::loadTrainData(const QString path, cv::Mat &trainData, cv::Mat &trainLabel, const bool HOG)
 {
 
     QDir fileDir(path);
     QStringList fileFolder = fileDir.entryList(QDir::Dirs|QDir::NoDotAndDotDot,QDir::Name);
-    qDebug() << fileFolder;
 
-
+    QString outMsg;
+    QTextStream TS(&outMsg);
+    TS << "Load Training Data Class : ";
+    for(int i = 0; i < fileFolder.size();i++)
+    {
+        TS << fileFolder[i] << ",";
+    }
+    outMsg.remove(outMsg.size()-1,1);
+    TS << "\n";
+    emit sendSystemLog(outMsg);
+    outMsg.clear();
 
     for(int i=0;i<fileFolder.size();i++)
     {
         fileDir.cd(fileFolder[i]);
         QStringList imageFileNames = fileDir.entryList(QDir::Files|QDir::NoDotAndDotDot,QDir::Name);
-        qDebug() << fileDir.dirName();
         for(int j=0;j<imageFileNames.size();j++)
         {
             cv::Mat src = cv::imread((fileDir.absolutePath()+"/"+imageFileNames[j]).toStdString(),CV_8UC1);
@@ -341,12 +429,21 @@ void tag_recognition::loadTrainData(const QString &path,cv::Mat &trainData,cv::M
 
 }
 
-void tag_recognition::loadTestData(const QString &path, std::vector<cv::Mat> &testData, std::vector<int> &testLabel, const bool HOG)
+void tag_recognition::loadTestData(const QString path, std::vector<cv::Mat> &testData, std::vector<int> &testLabel, const bool HOG)
 {
     QDir fileDir(path);
     QStringList fileFolder = fileDir.entryList(QDir::Dirs|QDir::NoDotAndDotDot,QDir::Name);
-    qDebug() << fileFolder;
-
+    QString outMsg;
+    QTextStream TS(&outMsg);
+    TS << "Load Test Data Class : ";
+    for(int i = 0; i < fileFolder.size();i++)
+    {
+        TS << fileFolder[i] << ",";
+    }
+    outMsg.remove(outMsg.size()-1,1);
+    TS << "\n";
+    emit sendSystemLog(outMsg);
+    outMsg.clear();
     for(int i=0;i<fileFolder.size();i++)
     {
         fileDir.cd(fileFolder[i]);
@@ -392,6 +489,51 @@ bool tag_recognition::loadPCAModel(const std::string &fileName)
     }
 
 
+}
+
+void tag_recognition::trainModel(const cv::Mat &trainData, const cv::Mat &trainLabel, const std::vector<cv::Mat> &testData, const std::vector<int> &testLabel, tagRecognitionParameters params)
+{
+    //train SVM model
+    //set C val
+    trainSVMModel->setC(params.CValPow);
+    //show msg
+    QString outMsg;
+    QTextStream TS(&outMsg);
+    TS << "Training... C = 2^" << params.CValPow << " ";
+    emit sendSystemLog(outMsg);
+    outMsg.clear();
+
+    cv::Ptr<cv::ml::TrainData> data;
+    //transform training data and label to openCV training data format
+    data = cv::ml::TrainData::create(trainData,cv::ml::ROW_SAMPLE,trainLabel);
+    //training
+    trainSVMModel->train(data);
+
+
+    //calculate accuracy
+    int correct = 0;
+    for(int i=0;i< testData.size();i++)
+    {
+        if(trainSVMModel->predict(testData[i]) == testLabel[i])
+            correct++;
+    }
+    double accuracy = (double)correct/(double)testData.size();
+    //show accuracy
+    TS << "Accuracy = " << accuracy << "\n";
+    emit sendSystemLog(outMsg);
+    outMsg.clear();
+
+
+    QString name = "model/model_";
+    if(params.withHOG)
+    {
+        name = name+"HOG_";
+    }
+    if(params.withPCA)
+    {
+        name = name+"PCA_"+QString::number(params.PCARemains)+"_";
+    }
+    trainSVMModel->save((name+QString::number(params.CValPow)+"_"+QString::number(accuracy)+".yaml").toStdString());
 }
 
 void tag_recognition::setTagBinaryThreshold(const int &value)

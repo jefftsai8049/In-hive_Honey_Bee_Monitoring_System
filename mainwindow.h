@@ -26,6 +26,7 @@
 #include <QVector>
 #include <QtSerialPort/QSerialPortInfo>
 #include <QtSerialPort/QSerialPort>
+#include <QFuture>
 
 //Tsai LIB
 #include <trajectory_tracking.h>
@@ -98,9 +99,9 @@ private slots:
 
     void on_show_image_checkBox_clicked();
 
-    void on_load_training_data_pushButton_clicked();
+//    void on_load_training_data_pushButton_clicked();
 
-    void on_test_recognition_pushButton_clicked();
+//    void on_test_recognition_pushButton_clicked();
 
     void on_binarythreshold_spinBox_valueChanged(int arg1);
 
@@ -152,6 +153,8 @@ private:
     int stitchMode = 0;//Manual
 
     bool manualLoad = 0;
+
+    int isStopProcessing = 2;
 
     std::vector<std::string> videoNames;
 

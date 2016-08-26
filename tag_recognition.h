@@ -19,6 +19,17 @@
 #endif
 #include <core/ocl.hpp>
 
+struct tagRecognitionParameters
+{
+    bool withHOG;
+    bool withPCA;
+    double CValPowUpper;
+    double CValPowLower;
+    double CValPow;
+    int PCARemains;
+
+};
+
 
 class tag_recognition : public QObject
 {
@@ -26,6 +37,8 @@ class tag_recognition : public QObject
 public:
     explicit tag_recognition(QObject *parent = 0);
     ~tag_recognition();
+
+    //for tag image processing
 
     void tagImgProc(cv::Mat src, cv::Mat &word1, cv::Mat &word2);
 
@@ -37,13 +50,22 @@ public:
 
     int wordMapping(const int &result);
 
+
+    //for training model and load model
+
+    void trainAllStep(const QString trainPathName,const QString testPathName,const tagRecognitionParameters params);
+
     bool loadSVMModel(const std::string &fileName);
 
-    void loadTrainData(const QString &path, cv::Mat &trainData, cv::Mat &trainLabel, const bool HOG);
+    void loadTrainData(const QString path, cv::Mat &trainData, cv::Mat &trainLabel, const bool HOG);
 
-    void loadTestData(const QString &path, std::vector<cv::Mat> &testData, std::vector<int> &testLabel, const bool HOG);
+    void loadTestData(const QString path, std::vector<cv::Mat> &testData, std::vector<int> &testLabel, const bool HOG);
 
     bool loadPCAModel(const std::string &fileName);
+
+    void trainModel(const cv::Mat &trainData, const cv::Mat &trainLabel, const std::vector<cv::Mat> &testData, const std::vector<int> &testLabel, tagRecognitionParameters params);
+
+    //for setting parameters
 
     void setTagBinaryThreshold(const int &value);
 
@@ -53,6 +75,7 @@ public:
 
     int binaryThreshold;
 signals:
+    void sendSystemLog(const QString &msg);
 
 public slots:
 
@@ -94,6 +117,10 @@ private:
     cv::Ptr<cv::ml::SVM> SVMModel;
 
     cv::PCA pca;
+
+    cv::Ptr<cv::ml::SVM> trainSVMModel;
+
+    cv::PCA *trainPCA;
 
     bool HOGStatus;
 
