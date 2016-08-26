@@ -1,12 +1,7 @@
 #ifndef DATAPROCESSWINDOW_H
 #define DATAPROCESSWINDOW_H
 
-#define BEE_TRACK_COUNT 100
-
-//Parameters
-#define IMAGE_SIZE_X 1200
-#define IMAGE_SIZE_Y 1600
-
+//STD LIB
 #include <stdlib.h>
 #include <string>
 #include <sstream>
@@ -21,10 +16,11 @@
 #include <QtConcurrent>
 #include <QDateTime>
 
-//Tsai LIB
+//by Tsai
 #include "object_tracking.h"
 #include "objecttrackingform.h"
 #include "mdl.h"
+#include "parameters.h"
 
 //QCustomPlot LIB
 #include <qcustomplot/qcustomplot.h>

@@ -436,15 +436,15 @@ void mouseCallBack(int event, int x, int y, int flag,void* userdata)
     {
         qDebug() << event << x << y << flag;
         shiftDelta = cv::Point(x,y)-lastPoint;
-        if (x > originPoint[0].x && x <= originPoint[0].x+imgSizeX)
+        if (x > originPoint[0].x && x <= originPoint[0].x+IMAGE_SIZE_X)
         {
             imgIndex = 0;
         }
-        if (x > originPoint[1].x && x <= originPoint[1].x+imgSizeX)
+        if (x > originPoint[1].x && x <= originPoint[1].x+IMAGE_SIZE_X)
         {
             imgIndex = 1;
         }
-        if (x > originPoint[2].x && x <= originPoint[2].x+imgSizeX)
+        if (x > originPoint[2].x && x <= originPoint[2].x+IMAGE_SIZE_X)
         {
             imgIndex = 2;
         }
@@ -455,12 +455,12 @@ void mouseCallBack(int event, int x, int y, int flag,void* userdata)
         lastPoint = cv::Point(x,y);
 
         qDebug() << originPoint[0].x << originPoint[0].y << originPoint[1].x << originPoint[1].y << originPoint[2].x << originPoint[2].y;
-        cv::Mat cat(cv::Size(imgSizeX*3,imgSizeY),CV_8UC3,cv::Scalar(0));
+        cv::Mat cat(cv::Size(IMAGE_SIZE_X*3,IMAGE_SIZE_Y),CV_8UC3,cv::Scalar(0));
         for (int i=0;i<3;i++)
         {
             if(originPoint[i].x>=0&&originPoint[i].y>=0)
             {
-                stitchFrame[i](cv::Rect(0,0,fmin(imgSizeX,imgSizeX*3-originPoint[i].x),imgSizeY-originPoint[i].y)).copyTo(cat(cv::Rect(originPoint[i].x,originPoint[i].y,fmin(imgSizeX,imgSizeX*3-originPoint[i].x),imgSizeY-originPoint[i].y)));
+                stitchFrame[i](cv::Rect(0,0,fmin(IMAGE_SIZE_X,IMAGE_SIZE_X*3-originPoint[i].x),IMAGE_SIZE_Y-originPoint[i].y)).copyTo(cat(cv::Rect(originPoint[i].x,originPoint[i].y,fmin(IMAGE_SIZE_X,IMAGE_SIZE_X*3-originPoint[i].x),IMAGE_SIZE_Y-originPoint[i].y)));
             }
 
         }
@@ -538,8 +538,8 @@ void MainWindow::on_stitching_pushButton_clicked()
 
         originPoint.resize(3);
         originPoint[0] = cv::Point(0,0);
-        originPoint[1] = cv::Point(imgSizeX,0);
-        originPoint[2] = cv::Point(imgSizeX*2,0);
+        originPoint[1] = cv::Point(IMAGE_SIZE_X,0);
+        originPoint[2] = cv::Point(IMAGE_SIZE_X*2,0);
 
         cv::Mat cat;
         cv::hconcat(stitchFrame,cat);
@@ -632,28 +632,21 @@ void MainWindow::on_actionChange_Stitching_Model_triggered()
 
 void MainWindow::on_actionTrain_New_Tag_Model_triggered()
 {
-    //for output msg
-    QString outMsg;
-    QTextStream TS(&outMsg);
-
-    //load train data
+    //choose train data folder
     QString fileName = QFileDialog::getExistingDirectory();
 
-
-    //load training data to data and label format
-
-    //load test data
+    //choose test data folder
     QString fileName2 = QFileDialog::getExistingDirectory();
 
+    //presetting parameters
     tagRecognitionParameters params;
     params.withHOG = ui->actionWith_HOG->isChecked();
     params.withPCA = ui->actionWith_PCA->isChecked();
-    params.CValPowLower = -5;
-    params.CValPowUpper = 15;
+    params.CValPowLower = C_LOWER;
+    params.CValPowUpper = C_UPPER;
     params.PCARemains = ui->PCARemains_spinBox->value();
 
     QFuture<void> trainAllStep = QtConcurrent::run(TR,&tag_recognition::trainAllStep,fileName,fileName2,params);
-    //    TR->trainAllStep(fileName,fileName2,params);
 }
 
 void MainWindow::on_erase_pushButton_clicked()

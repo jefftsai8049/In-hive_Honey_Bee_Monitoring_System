@@ -16,17 +16,7 @@
 
 #include "math_function.h"
 
-//Parameters
-#define IMAGE_SIZE_X 1200
-#define IMAGE_SIZE_Y 1600
-#define REMAIN_SIZE 20
-#define FORGET_TRACKING_TIME 20
-#define SHORTEST_SAMPLE_SIZE 5
-#define MIN_FPS 8.0
-#define PATTERN_TYPES 9
-#define PATTERN_TYPES_BEHAVIOR 3
-
-#define DIRECTION_THRESHOLD 30.0
+#include "parameters.h"
 
 enum pattern{
     NO_MOVE,

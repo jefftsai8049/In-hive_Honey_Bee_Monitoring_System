@@ -4,6 +4,7 @@
 #include <opencv.hpp>
 
 #include <object_tracking.h>
+#include "parameters.h"
 
 class mdl
 {

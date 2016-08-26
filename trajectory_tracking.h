@@ -21,11 +21,7 @@
 #include <math_function.h>
 #include <object_tracking.h>
 
-#define imgSizeX 1200
-#define imgSizeY 1600
-
-#define VIDEOTIME (30*60)
-#define HOUGH_CIRCLE_RESIZE 2
+#include "parameters.h"
 
 class trajectory_tracking : public QThread
 {

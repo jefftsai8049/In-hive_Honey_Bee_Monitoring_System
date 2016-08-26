@@ -21,12 +21,12 @@ void trajectory_tracking::setImageShiftOriginPoint(std::vector<cv::Point> origin
 
 cv::Mat trajectory_tracking::imageShift(std::vector<cv::Mat> stitchFrame, std::vector<cv::Point> originPoint)
 {
-    cv::Mat cat(cv::Size(imgSizeX*3,imgSizeY),CV_8UC3,cv::Scalar(0));
+    cv::Mat cat(cv::Size(IMAGE_SIZE_X*3,IMAGE_SIZE_Y),CV_8UC3,cv::Scalar(0));
     for (int i=0;i<3;i++)
     {
         if(this->originPoint[i].x>=0&&this->originPoint[i].y>=0)
         {
-            stitchFrame[i](cv::Rect(0,0,fmin(imgSizeX,imgSizeX*3-this->originPoint[i].x),imgSizeY-this->originPoint[i].y)).copyTo(cat(cv::Rect(this->originPoint[i].x,this->originPoint[i].y,fmin(imgSizeX,imgSizeX*3-this->originPoint[i].x),imgSizeY-this->originPoint[i].y)));
+            stitchFrame[i](cv::Rect(0,0,fmin(IMAGE_SIZE_X,IMAGE_SIZE_X*3-this->originPoint[i].x),IMAGE_SIZE_Y-this->originPoint[i].y)).copyTo(cat(cv::Rect(this->originPoint[i].x,this->originPoint[i].y,fmin(IMAGE_SIZE_X,IMAGE_SIZE_X*3-this->originPoint[i].x),IMAGE_SIZE_Y-this->originPoint[i].y)));
         }
 
     }
@@ -36,7 +36,7 @@ cv::Mat trajectory_tracking::imageShift(std::vector<cv::Mat> stitchFrame, std::v
 cv::Mat trajectory_tracking::imageShiftLoaded(std::vector<cv::Mat> stitchFrame)
 {
     //    qDebug() << this->originPoint[0].x << this->originPoint[0].y << this->originPoint[1].x << this->originPoint[1].y << this->originPoint[2].x << this->originPoint[2].y;
-    cv::Mat cat(cv::Size(imgSizeX*3,imgSizeY),CV_8UC1,cv::Scalar(0));
+    cv::Mat cat(cv::Size(IMAGE_SIZE_X*3,IMAGE_SIZE_Y),CV_8UC1,cv::Scalar(0));
 
     if(stitchFrame[0].type() == CV_8UC3)
     {
@@ -48,7 +48,7 @@ cv::Mat trajectory_tracking::imageShiftLoaded(std::vector<cv::Mat> stitchFrame)
     {
         if(this->originPoint[i].x>=0&&this->originPoint[i].y>=0)
         {
-            stitchFrame[i](cv::Rect(0,0,fmin(imgSizeX,imgSizeX*3-this->originPoint[i].x),imgSizeY-this->originPoint[i].y)).copyTo(cat(cv::Rect(this->originPoint[i].x,this->originPoint[i].y,fmin(imgSizeX,imgSizeX*3-this->originPoint[i].x),imgSizeY-this->originPoint[i].y)));
+            stitchFrame[i](cv::Rect(0,0,fmin(IMAGE_SIZE_X,IMAGE_SIZE_X*3-this->originPoint[i].x),IMAGE_SIZE_Y-this->originPoint[i].y)).copyTo(cat(cv::Rect(this->originPoint[i].x,this->originPoint[i].y,fmin(IMAGE_SIZE_X,IMAGE_SIZE_X*3-this->originPoint[i].x),IMAGE_SIZE_Y-this->originPoint[i].y)));
         }
 
     }
@@ -430,7 +430,7 @@ void trajectory_tracking::run()
 
 cv::Mat trajectory_tracking::imageCutBlack(cv::Mat src)
 {
-    cv::Mat dst(src, cv::Rect(0, 0, originPoint[2].x+imgSizeX, imgSizeY));
+    cv::Mat dst(src, cv::Rect(0, 0, originPoint[2].x+IMAGE_SIZE_X, IMAGE_SIZE_Y));
     return dst;
 }
 

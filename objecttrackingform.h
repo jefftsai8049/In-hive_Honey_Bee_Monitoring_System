@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <object_tracking.h>
+#include "parameters.h"
 
 namespace Ui {
 class ObjectTrackingForm;

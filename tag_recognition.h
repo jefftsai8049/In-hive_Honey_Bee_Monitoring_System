@@ -19,6 +19,8 @@
 #endif
 #include <core/ocl.hpp>
 
+#include "parameters.h"
+
 struct tagRecognitionParameters
 {
     bool withHOG;
@@ -53,7 +55,7 @@ public:
 
     //for training model and load model
 
-    void trainAllStep(const QString trainPathName,const QString testPathName,const tagRecognitionParameters params);
+    void trainAllStep(const QString trainPathName,const QString testPathName,tagRecognitionParameters params);
 
     bool loadSVMModel(const std::string &fileName);
 

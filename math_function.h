@@ -5,6 +5,7 @@
 #include <vector>
 #include <math.h>
 #include <opencv.hpp>
+#include "parameters.h"
 
 namespace mf {
 

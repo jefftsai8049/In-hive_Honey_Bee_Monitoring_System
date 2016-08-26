@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QString>
 #include <QStringList>
-
+#include "parameters.h"
 
 namespace Ui {
 class WhiteList;

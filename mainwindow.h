@@ -28,21 +28,17 @@
 #include <QtSerialPort/QSerialPort>
 #include <QFuture>
 
-//Tsai LIB
+//Tsai
 #include <trajectory_tracking.h>
 #include <tag_recognition.h>
 #include <dataprocesswindow.h>
+#include "parameters.h"
 
 //QSmartGraphicsView
 #include "qsmartgraphicsview/qsmartgraphicsview.h"
 #include "qsmartgraphicsview/qsmartlabel.h"
 
-//Parameters
-#define imgSizeX 1200
-#define imgSizeY 1600
 
-#define SERIAL_TIME 2000
-#define RECORD_TIME 60*10*1000
 
 namespace Ui {
 class MainWindow;

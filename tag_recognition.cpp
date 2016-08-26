@@ -288,7 +288,7 @@ int tag_recognition::wordMapping(const int &result)
 
 }
 
-void tag_recognition::trainAllStep(const QString trainPathName, const QString testPathName, const tagRecognitionParameters params)
+void tag_recognition::trainAllStep(const QString trainPathName, const QString testPathName, tagRecognitionParameters params)
 {
     //for output msg
     QString outMsg;
@@ -357,7 +357,7 @@ void tag_recognition::trainAllStep(const QString trainPathName, const QString te
 
     for(int j=0;j<(params.CValPowUpper-params.CValPowLower);j++)
     {
-        tagRecognitionParameters params;
+//        tagRecognitionParameters params;
         params.CValPow = pow(2,j+params.CValPowLower);
         trainModel(trainData,trainLabel,testData,testLabel,params);
     }
@@ -499,7 +499,7 @@ void tag_recognition::trainModel(const cv::Mat &trainData, const cv::Mat &trainL
     //show msg
     QString outMsg;
     QTextStream TS(&outMsg);
-    TS << "Training... C = 2^" << params.CValPow << " ";
+    TS << "Training... C = 2^" << log2(params.CValPow) << " ";
     emit sendSystemLog(outMsg);
     outMsg.clear();
 
@@ -533,7 +533,7 @@ void tag_recognition::trainModel(const cv::Mat &trainData, const cv::Mat &trainL
     {
         name = name+"PCA_"+QString::number(params.PCARemains)+"_";
     }
-    trainSVMModel->save((name+QString::number(params.CValPow)+"_"+QString::number(accuracy)+".yaml").toStdString());
+    trainSVMModel->save((name+QString::number(log2(params.CValPow))+"_"+QString::number(accuracy)+".yaml").toStdString());
 }
 
 void tag_recognition::setTagBinaryThreshold(const int &value)

@@ -47,7 +47,8 @@ HEADERS  += mainwindow.h \
     objecttrackingform.h \
     qcustomplot/qcustomplot.h \
     whitelist.h \
-    mdl.h
+    mdl.h \
+    parameters.h
 
 FORMS    += mainwindow.ui \
     dataprocesswindow.ui \
