@@ -65,17 +65,15 @@ win32 {
         QMAKE_CXXFLAGS_RELEASE *= -O2
     }
 
-    INCLUDEPATH += C:\\opencv300_vc2013\\include \
-                   C:\\opencv300_vc2013\\include\\opencv \
-                   C:\\opencv300_vc2013\\include\\opencv2 \
+    INCLUDEPATH += D:\\opencv310\\include \
+                   D:\\opencv310\\include\\opencv \
+                   D:\\opencv310\\include\\opencv2 \
 
 
 
-    LIBS += -LC:\\opencv300_vc2013\\x64\\lib \
-            -lopencv_world300 \
-            -lopencv_ts300 \
-            -lopencv_world300d \
-            -lopencv_ts300d  \
+    LIBS += -LD:\\opencv310\\lib \
+            -lopencv_world310 \
+            -lopencv_world310d \
 
 }
 
