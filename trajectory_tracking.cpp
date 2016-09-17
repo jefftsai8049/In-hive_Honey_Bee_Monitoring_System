@@ -136,11 +136,6 @@ void trajectory_tracking::setManualStitchingFileName(const std::string &fileName
     emit sendSystemLog("model/manual_stitching.xml loaded");
 }
 
-void trajectory_tracking::setTagBinaryThreshold(const double &value)
-{
-    TR->setTagBinaryThreshold(value);
-}
-
 void trajectory_tracking::setPCAandHOG(const bool &PCAS, const bool &HOGS)
 {
     TR->setPCAandHOG(PCAS,HOGS);
@@ -318,7 +313,7 @@ void trajectory_tracking::run()
 
 
 #ifndef DEBUG_TAG_RECOGNITION
-        //#pragma omp parallel for
+//        #pragma omp parallel for
 #endif
         for (int j=0;j<circles.size();j++)
         {

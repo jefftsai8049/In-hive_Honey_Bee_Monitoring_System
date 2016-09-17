@@ -69,13 +69,10 @@ public:
 
     //for setting parameters
 
-    void setTagBinaryThreshold(const int &value);
-
     void setPCAandHOG(const bool &PCAS,const bool &HOGS);
 
     void setTextSystem(const QString &textSys);
 
-    int binaryThreshold;
 signals:
     void sendSystemLog(const QString &msg);
 

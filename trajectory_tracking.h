@@ -55,8 +55,6 @@ public:
 
     void setManualStitchingFileName(const std::string &fileName);
 
-    void setTagBinaryThreshold(const double &value);
-
     void setPCAandHOG(const bool &PCAS,const bool &HOGS);
 
     void setTextSystem(const QString &textSys);

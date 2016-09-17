@@ -1,0 +1,7 @@
+#for set up model file path
+#stitchimg model, PCA model and SVM model
+
+@stitching model:model/manual_stitching.xml
+@PCA model:model/PCA_HOG_PCA_25_.txt
+@SVM_SUTM model:model/model_HOG_PCA_25_-2_0.984706_SUTM.yaml
+@SVM_MUTM model:model/model_HOG_PCA_25_-2_0.983461_MUTM.yaml

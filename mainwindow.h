@@ -98,9 +98,6 @@ private slots:
 //    void on_load_training_data_pushButton_clicked();
 
 //    void on_test_recognition_pushButton_clicked();
-
-    void on_binarythreshold_spinBox_valueChanged(int arg1);
-
     void on_actionChange_SVM_Model_triggered();
 
     void on_actionChange_PCA_Model_triggered();
@@ -108,8 +105,6 @@ private slots:
     void on_actionChange_Stitching_Model_triggered();
 
     void on_actionTrain_New_Tag_Model_triggered();
-
-
 
     void on_erase_pushButton_clicked();
 

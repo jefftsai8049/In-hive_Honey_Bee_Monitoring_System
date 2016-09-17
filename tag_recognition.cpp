@@ -536,13 +536,6 @@ void tag_recognition::trainModel(const cv::Mat &trainData, const cv::Mat &trainL
     trainSVMModel->save((name+QString::number(log2(params.CValPow))+"_"+QString::number(accuracy)+".yaml").toStdString());
 }
 
-void tag_recognition::setTagBinaryThreshold(const int &value)
-{
-    //set tag recognition binary threshold
-
-    this->binaryThreshold = value;
-}
-
 
 
 void tag_recognition::setPCAandHOG(const bool &PCAS, const bool &HOGS)

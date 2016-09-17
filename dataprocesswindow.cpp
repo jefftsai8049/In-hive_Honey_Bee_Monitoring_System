@@ -2116,6 +2116,12 @@ void DataProcessWindow::on_actionDaily_Trajectory_Analysis_triggered()
         emit sendSystemLog("File not found!");
         return;
     }
+    if(this->controlWhiteList.isEmpty()||this->experimentWhiteList.isEmpty())
+    {
+        emit sendSystemLog("Whitelist no ID");
+        return;
+    }
+
 
     QString fileName = "'../out/bee_info/trajectory_info.csv'";
 
@@ -2124,10 +2130,28 @@ void DataProcessWindow::on_actionDaily_Trajectory_Analysis_triggered()
     QString parameterCMD = "fileName="+fileName+";";
     QString functionCMD = "trajectory_analysis;";
 
+    QString controlGroupIDs = "groupAID={";
+    for(int i=0; i < this->controlWhiteList.size();i++)
+    {
+        controlGroupIDs = controlGroupIDs+this->controlWhiteList[i];
+        if(i!=this->controlWhiteList.size()-1)
+            controlGroupIDs = controlGroupIDs+",";
+    }
+    controlGroupIDs = controlGroupIDs+"};";
+
+    QString experimentGroupIDs = "groupBID={";
+    for(int i=0; i < this->experimentWhiteList.size();i++)
+    {
+        experimentGroupIDs = experimentGroupIDs+this->experimentWhiteList[i];
+        if(i!=this->experimentWhiteList.size()-1)
+            experimentGroupIDs = experimentGroupIDs+",";
+    }
+    experimentGroupIDs = experimentGroupIDs+"};";
+
     QString controlLegend = "controlLegendName='"+ui->control_legend_lineEdit->text()+"';";
     QString experimentLegend = "experimentLegendName='"+ui->experiment_legend_lineEdit->text()+"';";
 
-    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+functionCMD+'"';
+    QString outputCMD = defaultCMD+'"'+changeCMD+parameterCMD+controlLegend+experimentLegend+controlGroupIDs+experimentGroupIDs+functionCMD+'"';
 
     process->execute(outputCMD);
 }

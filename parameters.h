@@ -26,5 +26,8 @@
 #define C_UPPER 15
 #define C_LOWER -5
 
+//for file name set up
+#define MODEL_PATH_NAME "model/model_path.txt"
+
 #endif // PARAMETERS
 

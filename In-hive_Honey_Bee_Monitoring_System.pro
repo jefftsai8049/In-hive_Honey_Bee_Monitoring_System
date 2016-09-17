@@ -68,7 +68,7 @@ win32 {
     INCLUDEPATH += C:\\opencv300_vc2013\\include \
                    C:\\opencv300_vc2013\\include\\opencv \
                    C:\\opencv300_vc2013\\include\\opencv2 \
-#                   "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\include"  \
+
 
 
     LIBS += -LC:\\opencv300_vc2013\\x64\\lib \
@@ -76,8 +76,6 @@ win32 {
             -lopencv_ts300 \
             -lopencv_world300d \
             -lopencv_ts300d  \
-#            "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\lib\\win64\\microsoft\\libeng.lib"  \
-#            "C:\\Program Files\\MATLAB\\MATLAB Production Server\\R2015a\\extern\\lib\\win64\\microsoft\\libmx.lib"
 
 }
 

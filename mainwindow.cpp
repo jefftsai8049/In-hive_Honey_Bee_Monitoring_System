@@ -78,42 +78,77 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(TT,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
     connect(TR,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
 
-
-
     //send processing progress to mainwindows to show on progess bar
     connect(TT,SIGNAL(sendProcessingProgress(int)),this,SLOT(receiveProcessingProgress(int)));
 
     //send system log to mainwindow
     connect(this,SIGNAL(sendSystemLog(QString)),this,SLOT(receiveSystemLog(QString)));
 
-    //trajectory tracking parameters setting
-    //TT->setTagBinaryThreshold(ui->binarythreshold_spinBox->value());
-
-    //load stitching model file
-    QFile manulStitchModel("model/manual_stitching.xml");
-    if(manulStitchModel.exists())
+    //load model path
+    QFile modelPathFile(MODEL_PATH_NAME);
+    if(modelPathFile.exists())
     {
-        TT->setManualStitchingFileName(manulStitchModel.fileName().toStdString());
-        QString msg;
-        QTextStream TS(&msg);
-        TS << "Stitching Model File Name : \n" << manulStitchModel.fileName();
-        ui->Stitching_model_name_label->setText(msg);
-    }
-    else
-        emit sendSystemLog(manulStitchModel.fileName()+" no found!");
+        modelPathFile.open(QIODevice::ReadOnly);
+        while(!modelPathFile.atEnd())
+        {
+            QString msg = modelPathFile.readLine().trimmed();
 
-    //load PCA model for tag image reduce dimensions
-    QFile PCAModel("model/PCA_HOG_PCA_25_.txt");
-    if(PCAModel.exists())
-    {
-        TT->setPCAModelFileName(PCAModel.fileName().toStdString());
-        QString msg;
-        QTextStream TS(&msg);
-        TS << "PCA Model File Name : \n" << PCAModel.fileName();
-        ui->PCA_model_name_label->setText(msg);
+            if(msg[0] == '@')
+            {
+                QStringList list = msg.split(':');
+                if(list[0] == "@PCA model")
+                {
+                    //load PCA model for tag image reduce dimensions
+                    QFile PCAModel(list[1]);
+                    if(PCAModel.exists())
+                    {
+                        TT->setPCAModelFileName(PCAModel.fileName().toStdString());
+                        QString msg;
+                        QTextStream TS(&msg);
+                        TS << "PCA Model File Name : \n" << PCAModel.fileName();
+                        ui->PCA_model_name_label->setText(msg);
+                    }
+                    else
+                        emit sendSystemLog(PCAModel.fileName()+" no found!");
+
+                }
+                else if(list[0] == "@stitching model")
+                {
+                    //load stitching model file
+                    QFile manulStitchModel(list[1]);
+                    if(manulStitchModel.exists())
+                    {
+                        TT->setManualStitchingFileName(manulStitchModel.fileName().toStdString());
+                        QString msg;
+                        QTextStream TS(&msg);
+                        TS << "Stitching Model File Name : \n" << manulStitchModel.fileName();
+                        ui->Stitching_model_name_label->setText(msg);
+                    }
+                    else
+                        emit sendSystemLog(manulStitchModel.fileName()+" no found!");
+                }
+                else if(list[0] == "@SVM_SUTM model")
+                {
+                    SVMModel_SUTM.setFileName(list[1]);
+                    //load SVM model
+                    if(SVMModel_SUTM.exists())
+                    {
+                        TT->setSVMModelFileName(SVMModel_SUTM.fileName().toStdString());
+                        QString msg;
+                        QTextStream TS(&msg);
+                        TS << "SVM Model File Name : \n" << SVMModel_SUTM.fileName();
+                        ui->SVM_model_name_label->setText(msg);
+                    }
+                    else
+                        emit sendSystemLog(SVMModel_SUTM.fileName()+" no found!");
+                }
+                else if(list[0] == "@SVM_MUTM model")
+                {
+                    SVMModel_MUTM.setFileName(list[1]);
+                }
+            }
+        }
     }
-    else
-        emit sendSystemLog(PCAModel.fileName()+" no found!");
 
     //set initial hough circle parameters
     TT->setHoughCircleParameters(ui->dp_hough_circle_spinBox->value(),ui->minDist_hough_circle_spinBox->value(),ui->para_1_hough_circle_spinBox->value(),ui->para_2_hough_circle_spinBox->value(),ui->minRadius_hough_circle_spinBox->value(),ui->maxRadius_hough_circle_spinBox->value());
@@ -147,22 +182,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //set text system
     TT->setTextSystem(ui->text_system_comboBox->currentText());
-
-    //load SVM tag recognition model
-    SVMModel_SUTM.setFileName("model/model_HOG_PCA_25_-2_0.984706_SUTM.yaml");
-    SVMModel_MUTM.setFileName("model/model_HOG_PCA_25_-2_0.983461_MUTM.yaml");
-    SVMModel_Test.setFileName("model/model_HOG_PCA_25_-2_0.984706_Test.yaml");
-
-    if(SVMModel_SUTM.exists())
-    {
-        TT->setSVMModelFileName(SVMModel_SUTM.fileName().toStdString());
-        QString msg;
-        QTextStream TS(&msg);
-        TS << "SVM Model File Name : \n" << SVMModel_SUTM.fileName();
-        ui->SVM_model_name_label->setText(msg);
-    }
-    else
-        emit sendSystemLog(SVMModel_SUTM.fileName()+" no found!");
 
 }
 
@@ -212,25 +231,6 @@ void MainWindow::on_actionLoad_Raw_Video_File_triggered()
 
 
 }
-
-
-//void MainWindow::on_actionLoad_Stitching_Image_triggered()
-//{
-//    //load video file and take first to manul stitch
-
-//    QStringList fileNames = QFileDialog::getOpenFileNames();
-
-//    if(fileNames.isEmpty())
-//    {
-//        return;
-//    }
-
-//    std::vector<std::string> fileNamesVec;
-//    for(int i = 0; i < fileNames.size(); i++)
-//    {
-//        fileNamesVec.push_back(fileNames[i].toStdString());
-//    }
-//}
 
 void MainWindow::receivePano(cv::Mat pano)
 {
@@ -597,13 +597,6 @@ void MainWindow::on_maxRadius_hough_circle_spinBox_valueChanged(int arg1)
 void MainWindow::on_show_image_checkBox_clicked()
 {
     TT->setShowImage(ui->show_image_checkBox->isChecked());
-}
-
-
-
-void MainWindow::on_binarythreshold_spinBox_valueChanged(int arg1)
-{
-    TT->setTagBinaryThreshold(arg1);
 }
 
 void MainWindow::on_actionChange_SVM_Model_triggered()
