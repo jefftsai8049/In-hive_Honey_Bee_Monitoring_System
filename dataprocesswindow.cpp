@@ -2133,7 +2133,7 @@ void DataProcessWindow::on_actionDaily_Trajectory_Analysis_triggered()
     QString controlGroupIDs = "groupAID={";
     for(int i=0; i < this->controlWhiteList.size();i++)
     {
-        controlGroupIDs = controlGroupIDs+this->controlWhiteList[i];
+        controlGroupIDs = controlGroupIDs+"'"+this->controlWhiteList[i]+"'";
         if(i!=this->controlWhiteList.size()-1)
             controlGroupIDs = controlGroupIDs+",";
     }
@@ -2142,7 +2142,7 @@ void DataProcessWindow::on_actionDaily_Trajectory_Analysis_triggered()
     QString experimentGroupIDs = "groupBID={";
     for(int i=0; i < this->experimentWhiteList.size();i++)
     {
-        experimentGroupIDs = experimentGroupIDs+this->experimentWhiteList[i];
+        experimentGroupIDs = experimentGroupIDs+"'"+this->experimentWhiteList[i]+"'";
         if(i!=this->experimentWhiteList.size()-1)
             experimentGroupIDs = experimentGroupIDs+",";
     }
